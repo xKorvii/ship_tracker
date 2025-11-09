@@ -4,15 +4,14 @@ Desarrollado por Martín Acevedo - Nicolás Corvalán
 # Ship Tracker
 Aplicación móvil desarrollada en Flutter para el seguimiento de pedidos y gestión de entregas. Permite visualizar el estado de los pedidos, realizar nuevos, consultar el historial y editar el perfil del usuario.
 
-# Instalación y ejecución
-# Requisitos previos
+# Instalación y ejecución - Requisitos previos
 - Tener instalado [Flutter SDK](https://flutter.dev/docs/get-started/install)
 - Android Studio o VS Code con el plugin de Flutter
 - Un dispositivo Android o emulador configurado
 
 # Pasos para ejecutar el proyecto
 1. Clonar el repositorio:
-  git clone https://github.com/M4rt1nnnn/ship_tracker
+  git clone https://github.com/xKorvii/ship_tracker
   cd ship_tracker
 2. Instalar dependencias
   flutter pub get
