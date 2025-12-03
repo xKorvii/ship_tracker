@@ -5,6 +5,8 @@ import 'package:ship_tracker/pages/login_page.dart';
 import 'package:ship_tracker/utils/validators.dart';
 import '../components/button.dart';
 import 'package:ship_tracker/theme/theme.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:ship_tracker/utils/auth_errors.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -65,25 +67,60 @@ class _RegisterPageState extends State<RegisterPage> {
       _isLoading = true;
     });
 
-    await Future.delayed(const Duration(seconds: 2)); 
+    try {
+      // Llamada a Supabase Auth
+      await Supabase.instance.client.auth.signUp(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+        data: {
+          // Enviar datos extra como metadata del usuario
+          'first_name': _nameController.text.trim(),
+          'last_name': _lastNameController.text.trim(),
+          'rut': _rutController.text.trim(),
+          'phone': _phoneController.text.trim(),
+        },
+      );
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    setState(() {
-      _isLoading = false;
-    });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('¡Registro exitoso! Por favor inicia sesión.'),
+          backgroundColor: verde,
+        ),
+      );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('¡Registro exitoso!'),
-        backgroundColor: verde,
-      ),
-    );
+      // Redirigir al Login
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+      );
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const LoginPage()),
-    );
+    } on AuthException catch (e) {
+      // Traductor de errores
+      final mensajeEsp = AuthErrorTranslator.translate(e.message);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(mensajeEsp),
+          backgroundColor: rojo,
+        ),
+      );
+    } catch (e) {
+      // Manejo de errores generales
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Ocurrió un error inesperado: $e'),
+          backgroundColor: rojo,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
