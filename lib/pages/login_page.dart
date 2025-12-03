@@ -5,6 +5,8 @@ import 'package:ship_tracker/pages/register_page.dart';
 import '../components/text_field.dart'; 
 import '../components/button.dart';
 import 'package:ship_tracker/theme/theme.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:ship_tracker/utils/auth_errors.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -91,22 +93,30 @@ class _LoginPageState extends State<LoginPage> {
 
                 CustomButton(
                   text: 'Iniciar Sesión',
-                  onPressed: () {
+                  onPressed: () async { 
                     if (_formKey.currentState!.validate()) {
-                      final email = _emailController.text;
-                      final password = _passwordController.text;
-                      final validUsers = {
-                        'nico@gmail.com': '12345678',
-                        'martin@gmail.com': 'contra123',
-                      };
+                      final email = _emailController.text.trim(); 
+                      final password = _passwordController.text.trim();
 
-                      if (validUsers.containsKey(email) && validUsers[email] == password) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const HomePage()),
+                      try {
+                        // Intento de inicio de sesión real
+                        await Supabase.instance.client.auth.signInWithPassword(
+                          email: email,
+                          password: password,
                         );
-                      } else {
-                        _showErrorDialog('Correo electrónico o contraseña incorrectos.');
+
+                        if (mounted) {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => const HomePage()),
+                          );
+                        }
+                      } on AuthException catch (e) {
+                        // Traductor de errores
+                        final mensajeEsp= AuthErrorTranslator.translate(e.message);
+                        _showErrorDialog(mensajeEsp);
+                      } catch (e) {
+                        _showErrorDialog('Ocurrió un error inesperado. Intenta nuevamente.');
                       }
                     }
                   },
