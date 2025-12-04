@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:ship_tracker/theme/theme.dart';
 
 class CustomTextField extends StatefulWidget {
@@ -8,6 +9,7 @@ class CustomTextField extends StatefulWidget {
   final int maxLines;
   final String? Function(String?)? validator;
   final TextEditingController? controller;
+  final List<TextInputFormatter>? inputFormatters;
 
   const CustomTextField({
     super.key,
@@ -17,6 +19,7 @@ class CustomTextField extends StatefulWidget {
     this.maxLines = 1,
     this.validator,
     this.controller,
+    this.inputFormatters,
   });
 
   @override
@@ -26,10 +29,12 @@ class CustomTextField extends StatefulWidget {
 class CustomTextFieldState extends State<CustomTextField> {
   final FocusNode _focusNode = FocusNode();
   String? _errorText;
+  late bool _isObscure;
 
   @override
   void initState() {
     super.initState();
+    _isObscure = widget.obscureText;
 
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus) {
@@ -60,14 +65,35 @@ class CustomTextFieldState extends State<CustomTextField> {
 
   @override
   Widget build(BuildContext context) {
+    Widget? botonOjo; // botón para ver contraseña
+
+    if (widget.obscureText) {
+      // Si el campo es de contraseña, configuramos el botón
+      botonOjo = IconButton(
+        icon: Icon(
+          _isObscure ? Icons.visibility : Icons.visibility_off,
+          color: grisOscuro,
+        ),
+        onPressed: () {
+          setState(() {
+            _isObscure = !_isObscure;
+          });
+        },
+      );
+    } else {
+      // Si no es contraseña, no ponemos nada (null)
+      botonOjo = null;
+    }
+
     return SizedBox(
       width: 300,
       child: TextField(
         focusNode: _focusNode,
         controller: widget.controller,
-        obscureText: widget.obscureText,
+        obscureText: _isObscure,
         keyboardType: widget.keyboardType,
         maxLines: widget.maxLines,
+        inputFormatters: widget.inputFormatters,
         decoration: InputDecoration(
           labelText: widget.labelText,
           errorText: _errorText,
@@ -84,6 +110,7 @@ class CustomTextFieldState extends State<CustomTextField> {
             borderSide: BorderSide(color: verde, width: 2),
             borderRadius: BorderRadius.circular(10),
           ),
+          suffixIcon: botonOjo, 
         ),
         onChanged: (_) {
           if (_errorText != null) {

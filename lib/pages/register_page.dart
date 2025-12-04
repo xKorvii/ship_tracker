@@ -7,6 +7,7 @@ import '../components/button.dart';
 import 'package:ship_tracker/theme/theme.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:ship_tracker/utils/auth_errors.dart';
+import 'package:ship_tracker/utils/rut_formatter.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -214,8 +215,11 @@ class _RegisterPageState extends State<RegisterPage> {
                       key: _rutKey,
                       labelText: 'RUT',
                       controller: _rutController,
+                      keyboardType: TextInputType.text, 
+                      inputFormatters: [
+                        RutFormatter(),
+                      ],
                       validator: Validators.validateRut,
-                      keyboardType: TextInputType.text,
                     ),
                     const SizedBox(height: 12),
                     CustomTextField(
