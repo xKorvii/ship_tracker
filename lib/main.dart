@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; 
 import 'pages/login_page.dart'; 
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'providers/order_provider.dart';
+
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -10,7 +13,14 @@ Future<void> main() async {
     anonKey: 'sb_publishable_uzRQazMCSotJURE8iUG7jg_5yaZS_bu', // API key
   );
 
-  runApp(const MyApp());
+  runApp(
+    MultiProvider( 
+      providers: [
+        ChangeNotifierProvider(create: (_) => OrderProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
