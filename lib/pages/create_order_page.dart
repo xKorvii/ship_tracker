@@ -6,6 +6,7 @@ import 'package:ship_tracker/theme/theme.dart';
 import '../components/button.dart';
 import 'package:provider/provider.dart'; 
 import 'package:ship_tracker/providers/order_provider.dart';
+import 'package:ship_tracker/utils/rut_formatter.dart';
 
 class CreateOrderPage extends StatefulWidget {
   const CreateOrderPage({super.key});
@@ -200,6 +201,9 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
                       key: _rutKey,
                       labelText: 'Rut del cliente',
                       controller: _rutController,
+                      inputFormatters: [
+                        RutFormatter(),
+                      ],
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'El RUT es obligatorio.';

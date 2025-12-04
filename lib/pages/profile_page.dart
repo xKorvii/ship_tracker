@@ -6,6 +6,7 @@ import 'package:ship_tracker/components/button.dart';
 import 'package:ship_tracker/theme/theme.dart';
 import 'package:ship_tracker/components/bottom_navbar.dart';
 import 'package:ship_tracker/pages/home.dart';
+import 'package:ship_tracker/utils/rut_formatter.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -198,8 +199,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         key: _rutKey,
                         labelText: 'RUT',
                         controller: _rutController,
-                        validator: Validators.validateRut,
                         keyboardType: TextInputType.text,
+                        inputFormatters: [
+                          RutFormatter(),
+                        ],
+                        validator: Validators.validateRut,
                       ),
                       const SizedBox(height: 12),
                       CustomTextField(
