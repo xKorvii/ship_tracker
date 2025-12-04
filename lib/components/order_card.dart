@@ -4,19 +4,29 @@ import '../components/order_detail_modal.dart';
 import 'package:ship_tracker/theme/theme.dart';
 
 class OrderCard extends StatelessWidget {
+  final int orderId;
   final String codigo;
   final String direccion;
   final String estado;
   final Color estadoColor;
   final bool mostrarBotones;
+  final String clientName;
+  final String clientRut;
+  final String deliveryWindow;
+  final String notes;
 
   const OrderCard({
     super.key,
+    required this.orderId,
     required this.codigo,
     required this.direccion,
     required this.estado,
     required this.estadoColor,
     this.mostrarBotones = true,
+    required this.clientName,
+    required this.clientRut,
+    required this.deliveryWindow,
+    required this.notes,
   });
 
   @override
@@ -27,7 +37,16 @@ class OrderCard extends StatelessWidget {
           context: context,
           backgroundColor: transparencia,
           isScrollControlled: true,
-          builder: (_) => OrderDetailModal(mostrarBotones: mostrarBotones),
+          builder: (_) => OrderDetailModal(
+            mostrarBotones: mostrarBotones,
+            orderId: orderId,
+            codigo: codigo,
+            direccion: direccion,
+            clientName: clientName,
+            clientRut: clientRut,
+            deliveryWindow: deliveryWindow,
+            notes: notes,
+          ),
         );
       },
       child: Container(

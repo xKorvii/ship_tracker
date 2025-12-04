@@ -4,6 +4,8 @@ import 'package:ship_tracker/components/text_field.dart';
 import 'package:ship_tracker/pages/home.dart';
 import 'package:ship_tracker/theme/theme.dart';
 import '../components/button.dart';
+import 'package:provider/provider.dart'; 
+import 'package:ship_tracker/providers/order_provider.dart';
 
 class CreateOrderPage extends StatefulWidget {
   const CreateOrderPage({super.key});
@@ -92,23 +94,45 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
 
     setState(() => _isSaving = true);
 
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      await Provider.of<OrderProvider>(context, listen: false).addOrder(
+        code: _idController.text.trim(),
+        address: _addressController.text.trim(),
+        clientName: _nameController.text.trim(),
+        clientRut: _rutController.text.trim(),
+        deliveryWindow: _timeController.text.trim(),
+        notes: _notesController.text.trim(),
+      );
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('¡Pedido guardado exitosamente!'),
+          backgroundColor: verdeClaro,
+        ),
+      );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('¡Pedido guardado exitosamente!'),
-        backgroundColor: verdeClaro,
-      ),
-    );
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const HomePage()),
-    );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
+      
+    } catch (e) {
+      // Manejo de errores reales
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al guardar: $e'), 
+          backgroundColor: rojo
+        ),
+      );
+    } finally {
+      // Asegura que el loading se apague
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
   }
 
   @override

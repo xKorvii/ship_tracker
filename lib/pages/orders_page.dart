@@ -8,6 +8,9 @@ import 'package:ship_tracker/components/search_bar.dart';
 import 'package:ship_tracker/pages/create_order_page.dart';
 import 'package:ship_tracker/pages/home.dart';
 import 'package:ship_tracker/theme/theme.dart';
+import 'package:provider/provider.dart';
+//import 'package:ship_tracker/components/orderby.dart';
+import 'package:ship_tracker/providers/order_provider.dart';
 
 class OrdersPage extends StatefulWidget {
   const OrdersPage({super.key});
@@ -27,6 +30,14 @@ class _OrdersPageState extends State<OrdersPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Obtener datos
+    final orderProvider = Provider.of<OrderProvider>(context);
+    
+    // Filtro para todo lo que no sea pendiente
+    final historial = orderProvider.orders
+        .where((o) => o.status != 'Pendiente')
+        .toList();
+        
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -65,40 +76,40 @@ class _OrdersPageState extends State<OrdersPage> {
 
           body: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const WelcomeHeader(),
-                  const SizedBox(height: 16),
-                  const Search(),
-                  const SizedBox(height: 10),
-                  const OrderFilter(),
-                  const SizedBox(height: 16),
-                  OrderCard(
-                    codigo: 'ABCD-1234',
-                    direccion: 'Av. San Miguel 3605, Talca',
-                    estado: 'Completado',
-                    estadoColor: verdeClaro,
-                    mostrarBotones: false,
-                  ),
-                  OrderCard(
-                    codigo: 'LKJH-9876',
-                    direccion: 'Av. San Miguel 3605, Talca',
-                    estado: 'Completado',
-                    estadoColor: verdeClaro,
-                    mostrarBotones: false,
-                  ),
-                  OrderCard(
-                    codigo: 'XYZA-4521',
-                    direccion: 'Av. San Miguel 3605, Talca',
-                    estado: 'Cancelado',
-                    estadoColor: rojo,
-                    mostrarBotones: false,
-                  ),
-                ],
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const WelcomeHeader(),
+                const SizedBox(height: 16),
+                const Search(),
+                const SizedBox(height: 10),
+                const OrderFilter(),
+                const SizedBox(height: 16),
+                
+                Expanded(
+                  child: historial.isEmpty
+                      ? Center(child: Text("No hay historial de pedidos", style: TextStyle(color: grisOscuro)))
+                      : ListView.builder(
+                          itemCount: historial.length,
+                          itemBuilder: (context, index) {
+                            final order = historial[index];
+                            return OrderCard(
+                              orderId: order.id!,
+                              codigo: order.code,
+                              direccion: order.address,
+                              estado: order.status,
+                              // Color dinámico según estado
+                              estadoColor: order.status == 'Completado' ? verdeClaro : rojo,
+                              mostrarBotones: false, // En el historial no mostramos botones de acción
+                              clientName: order.clientName,
+                              clientRut: order.clientRut,
+                              deliveryWindow: order.deliveryWindow,
+                              notes: order.notes,
+                            );
+                          },
+                        ),
+                ),
+              ],
             ),
           ),
 

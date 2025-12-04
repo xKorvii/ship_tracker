@@ -7,6 +7,8 @@ import 'package:ship_tracker/components/search_bar.dart';
 import 'package:ship_tracker/pages/create_order_page.dart';
 import 'package:ship_tracker/pages/login_page.dart';
 import 'package:ship_tracker/theme/theme.dart';
+import 'package:provider/provider.dart';
+import 'package:ship_tracker/providers/order_provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,6 +18,15 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    // Cargar datos al iniciar la pantalla
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<OrderProvider>(context, listen: false).fetchOrders();
+    });
+  }
+
   Future<bool> _confirmLogout() async {
     final result = await showDialog<bool>(
       context: context,
@@ -39,13 +50,15 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Obtener datos del provider
+    final orderProvider = Provider.of<OrderProvider>(context);
+
+    final pedidosPendientes = orderProvider.orders
+        .where((o) => o.status == 'Pendiente')
+        .toList();
+
     return WillPopScope(
-      onWillPop: () async {
-        final shouldLogout = await _confirmLogout();
-        if (shouldLogout) {
-        }
-        return false; 
-      },
+      onWillPop: () async => false,
       child: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: Scaffold(
@@ -79,35 +92,38 @@ class _HomePageState extends State<HomePage> {
 
           body: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const WelcomeHeader(),
-                  const SizedBox(height: 16),
-                  const Search(),
-                  const SizedBox(height: 10),
-                  OrderCard(
-                    codigo: 'ABCD-1234',
-                    direccion: 'Av. San Miguel 3605, Talca',
-                    estado: 'Pendiente',
-                    estadoColor: amarillo,
-                  ),
-                  OrderCard(
-                    codigo: 'LKJH-9876',
-                    direccion: 'Av. San Miguel 3605, Talca',
-                    estado: 'Pendiente',
-                    estadoColor: amarillo,
-                  ),
-                  OrderCard(
-                    codigo: 'XYZA-4521',
-                    direccion: 'Av. San Miguel 3605, Talca',
-                    estado: 'Pendiente',
-                    estadoColor: amarillo,
-                  ),
-                ],
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const WelcomeHeader(),
+                const SizedBox(height: 16),
+                const Search(),
+                const SizedBox(height: 10),
+                
+                Expanded(
+                  child: orderProvider.isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : pedidosPendientes.isEmpty
+                          ? const Center(child: Text("No tienes pedidos pendientes"))
+                          : ListView.builder(
+                              itemCount: pedidosPendientes.length, 
+                              itemBuilder: (context, index) {
+                                final order = pedidosPendientes[index];
+                                return OrderCard(
+                                  orderId: order.id!,
+                                  codigo: order.code,
+                                  direccion: order.address,
+                                  estado: order.status,
+                                  estadoColor: amarillo,
+                                  clientName: order.clientName,
+                                  clientRut: order.clientRut,
+                                  deliveryWindow: order.deliveryWindow,
+                                  notes: order.notes,
+                                );
+                              },
+                            ),
+                ),
+              ],
             ),
           ),
 
