@@ -10,6 +10,7 @@ class CustomTextField extends StatefulWidget {
   final String? Function(String?)? validator;
   final TextEditingController? controller;
   final List<TextInputFormatter>? inputFormatters;
+  final Widget? prefix;
 
   const CustomTextField({
     super.key,
@@ -20,6 +21,7 @@ class CustomTextField extends StatefulWidget {
     this.validator,
     this.controller,
     this.inputFormatters,
+    this.prefix,
   });
 
   @override
@@ -111,6 +113,8 @@ class CustomTextFieldState extends State<CustomTextField> {
             borderRadius: BorderRadius.circular(10),
           ),
           suffixIcon: botonOjo, 
+          prefixIcon: widget.prefix, 
+          prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
         ),
         onChanged: (_) {
           if (_errorText != null) {

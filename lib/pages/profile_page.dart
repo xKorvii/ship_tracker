@@ -211,7 +211,24 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         labelText: 'Teléfono',
                         controller: _phoneController,
                         validator: Validators.validatePhone,
-                        keyboardType: TextInputType.phone,
+                        keyboardType: TextInputType.number,
+                        prefix: Container(
+                          margin: const EdgeInsets.only(right: 10, left: 10),
+                          padding: const EdgeInsets.only(right: 10),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              right: BorderSide(color: grisOscuro, width: 1),
+                            ),
+                          ),
+                          child: Text(
+                            '🇨🇱 +56 9',
+                            style: GoogleFonts.inter(
+                              color: negro,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 12),
                       CustomTextField(

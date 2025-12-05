@@ -28,11 +28,11 @@ class Validators {
     if (value == null || value.isEmpty) {
       return 'El teléfono no puede estar vacío.';
     }
-    if (!value.startsWith('+56')) {
-      return 'El teléfono debe comenzar con +56.';
+    if (!RegExp(r'^\d+$').hasMatch(value)) {
+      return 'Solo se permiten números.';
     }
-    if (value.length != 12) {
-      return 'El teléfono debe tener 11 dígitos más el prefijo.';
+    if (value.length != 8) {
+      return 'El número debe tener 8 dígitos.';
     }
     return null;
   }
