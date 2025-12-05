@@ -212,6 +212,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         controller: _phoneController,
                         validator: Validators.validatePhone,
                         keyboardType: TextInputType.number,
+                        maxLength: 8,
                         prefix: Container(
                           margin: const EdgeInsets.only(right: 10, left: 10),
                           padding: const EdgeInsets.only(right: 10),

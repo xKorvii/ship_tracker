@@ -7,6 +7,7 @@ class CustomTextField extends StatefulWidget {
   final bool obscureText;
   final TextInputType keyboardType;
   final int maxLines;
+  final int? maxLength;
   final String? Function(String?)? validator;
   final TextEditingController? controller;
   final List<TextInputFormatter>? inputFormatters;
@@ -18,6 +19,7 @@ class CustomTextField extends StatefulWidget {
     this.obscureText = false,
     this.keyboardType = TextInputType.text,
     this.maxLines = 1,
+    this.maxLength,
     this.validator,
     this.controller,
     this.inputFormatters,
@@ -95,6 +97,7 @@ class CustomTextFieldState extends State<CustomTextField> {
         obscureText: _isObscure,
         keyboardType: widget.keyboardType,
         maxLines: widget.maxLines,
+        maxLength: widget.maxLength,
         inputFormatters: widget.inputFormatters,
         decoration: InputDecoration(
           labelText: widget.labelText,
@@ -115,6 +118,7 @@ class CustomTextFieldState extends State<CustomTextField> {
           suffixIcon: botonOjo, 
           prefixIcon: widget.prefix, 
           prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+          counterText: "",
         ),
         onChanged: (_) {
           if (_errorText != null) {
