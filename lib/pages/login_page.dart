@@ -16,7 +16,8 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _formKey = GlobalKey<FormState>();
+  final _emailKey = GlobalKey<CustomTextFieldState>();
+  final _passwordKey = GlobalKey<CustomTextFieldState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -44,8 +45,8 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: gris,
       body: Center(
         child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -61,6 +62,7 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 48), 
 
                 CustomTextField(
+                  key: _emailKey,
                   labelText: 'Correo electrónico',
                   keyboardType: TextInputType.emailAddress,
                   controller: _emailController,
@@ -76,6 +78,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 16),
                 CustomTextField(
+                  key: _passwordKey,
                   labelText: 'Contraseña',
                   obscureText: true,
                   controller: _passwordController,
@@ -94,11 +97,16 @@ class _LoginPageState extends State<LoginPage> {
                 CustomButton(
                   text: 'Iniciar Sesión',
                   onPressed: () async { 
-                    if (_formKey.currentState!.validate()) {
-                      final email = _emailController.text.trim(); 
-                      final password = _passwordController.text.trim();
+                    final emailError = _emailKey.currentState?.validate();
+                    final passwordError = _passwordKey.currentState?.validate();
 
-                      try {
+                    if (emailError != null || passwordError != null) {
+                      return;
+                    }                 
+                    final email = _emailController.text.trim();
+                    final password = _passwordController.text.trim();
+
+                    try {
                         // Intento de inicio de sesión real
                         await Supabase.instance.client.auth.signInWithPassword(
                           email: email,
@@ -118,7 +126,6 @@ class _LoginPageState extends State<LoginPage> {
                       } catch (e) {
                         _showErrorDialog('Ocurrió un error inesperado. Intenta nuevamente.');
                       }
-                    }
                   },
                 ),
 

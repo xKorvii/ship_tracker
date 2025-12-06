@@ -7,6 +7,11 @@ import 'package:ship_tracker/theme/theme.dart';
 import 'package:ship_tracker/components/bottom_navbar.dart';
 import 'package:ship_tracker/pages/home.dart';
 import 'package:ship_tracker/utils/rut_formatter.dart';
+import 'package:provider/provider.dart';
+import 'package:ship_tracker/providers/user_provider.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:ship_tracker/components/user_avatar.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -29,8 +34,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final _phoneKey = GlobalKey<CustomTextFieldState>();
   final _emailKey = GlobalKey<CustomTextFieldState>();
   final _passwordKey = GlobalKey<CustomTextFieldState>();
-
-  bool _isSaving = false;
+  final _currentPasswordController = TextEditingController();
+  final _currentPasswordKey = GlobalKey<CustomTextFieldState>();
 
   Future<bool> _goBackToHome() async {
     Navigator.pushReplacement(
@@ -38,6 +43,51 @@ class _EditProfilePageState extends State<EditProfilePage> {
       MaterialPageRoute(builder: (context) => const HomePage()),
     );
     return false;
+  }
+
+  // Seleccionar imagen de galeria
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+
+    if (image != null) {
+      final File imageFile = File(image.path);
+      _uploadSelectedImage(imageFile);
+    }
+  }
+
+  // Subir imagen
+  Future<void> _uploadSelectedImage(File imageFile) async {
+    try {
+      await Provider.of<UserProvider>(context, listen: false).uploadProfilePhoto(imageFile);
+       
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: const Text('Foto actualizada'), backgroundColor: verde),
+      );
+    } catch (e) {
+       if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error subiendo imagen: $e'), backgroundColor: rojo),
+      );
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    _nameController.text = userProvider.firstName;
+    _lastNameController.text = userProvider.lastName;
+    _rutController.text = userProvider.rut;
+    _emailController.text = userProvider.email; 
+    
+    String rawPhone = userProvider.phone;
+    if (rawPhone.startsWith('+569')) {
+      _phoneController.text = rawPhone.substring(4);
+    } else {
+      _phoneController.text = rawPhone;
+    }
   }
 
   @override
@@ -48,6 +98,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _phoneController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _currentPasswordController.dispose(); 
     super.dispose();
   }
 
@@ -58,7 +109,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
       _rutKey.currentState?.validate(),
       _phoneKey.currentState?.validate(),
       _emailKey.currentState?.validate(),
-      _passwordKey.currentState?.validate(),
+      _passwordKey.currentState?.validate(), 
+      _currentPasswordKey.currentState?.validate(),
     ];
 
     if (errors.any((e) => e != null)) {
@@ -71,26 +123,69 @@ class _EditProfilePageState extends State<EditProfilePage> {
       return;
     }
 
-    setState(() => _isSaving = true);
-    await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
-    setState(() => _isSaving = false);
+    // Validación campo contraseña
+    if (_passwordKey.currentState?.validate() != null) {
+      return; 
+    }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('¡Perfil actualizado correctamente!'),
-        backgroundColor: verde,
-      ),
-    );
+    try {
+      final isValid = await Provider.of<UserProvider>(context, listen: false)
+        .verifyPassword(_currentPasswordController.text.trim());
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const HomePage()),
-    );
+      if (!isValid) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('La contraseña actual es incorrecta.'), 
+            backgroundColor: rojo
+          ),
+        );
+        return;
+      }
+
+      String? newPassword;
+      if (_passwordController.text.isNotEmpty) {
+        newPassword = _passwordController.text.trim();
+      }
+
+      await Provider.of<UserProvider>(context, listen: false).updateProfile(
+        firstName: _nameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
+        rut: _rutController.text.trim(),
+        phone: '+569${_phoneController.text.trim()}', // Formatear teléfono
+        password: newPassword,
+      );
+
+      if (!mounted) return;
+
+      // Limpiar campo contraseña
+      _currentPasswordController.clear();
+      _passwordController.clear();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('¡Datos actualizados correctamente!'),
+          backgroundColor: verde,
+        ),
+      );
+      
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al guardar: $e'), backgroundColor: rojo),
+      );
+    } 
   }
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    final isLoading = userProvider.isLoading;
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -128,8 +223,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           body: Stack(
             children: [
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
                   child: Column(
@@ -137,47 +231,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     children: [
                       const SizedBox(height: 16),
                       Center(
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            CircleAvatar(
-                              radius: 40,
-                              backgroundColor: gris,
-                              child: Icon(
-                                Icons.person_outline,
-                                size: 50,
-                                color: negro,
-                              ),
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: GestureDetector(
-                                onTap: () {
-
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.all(6),
-                                  decoration: BoxDecoration(
-                                    color: verde,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: negro,
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Icon(
-                                    Icons.edit,
-                                    color: blanco,
-                                    size: 18,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                        child: UserAvatar(
+                          radius: 50,
+                          photoUrl: userProvider.photoUrl, 
+                          onTap: isLoading ? null : _pickImage, 
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -238,27 +295,49 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         controller: _emailController,
                         validator: Validators.validateEmail,
                         keyboardType: TextInputType.emailAddress,
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 12),
+                      CustomTextField(
+                        key: _currentPasswordKey, 
+                        labelText: 'Contraseña Actual (Obligatoria)', 
+                        obscureText: true,
+                        controller: _currentPasswordController,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Requerido para guardar cambios.';
+                          }
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 12),
                       CustomTextField(
                         key: _passwordKey,
-                        labelText: 'Contraseña',
+                        labelText: 'Nueva Contraseña',
                         obscureText: true,
                         controller: _passwordController,
-                        validator: Validators.validatePassword,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return null; 
+                          }
+                          if (value.length < 8) {
+                            return 'Mínimo 8 caracteres';
+                          }
+                          return Validators.validatePassword(value); 
+                        },
                       ),
                       const SizedBox(height: 48),
                       CustomButton(
                         text: 'Guardar cambios',
                         backgroundColor: azulOscuro,
                         textColor: blanco,
-                        onPressed: _isSaving ? null : _saveProfile,
+                        onPressed: isLoading ? null : _saveProfile,
                       ),
                     ],
                   ),
                 ),
               ),
-              if (_isSaving)
+              if (isLoading)
                 Container(
                   color: Colors.black.withAlpha(128),
                   child: const Center(

@@ -12,6 +12,7 @@ class CustomTextField extends StatefulWidget {
   final TextEditingController? controller;
   final List<TextInputFormatter>? inputFormatters;
   final Widget? prefix;
+  final bool readOnly;
 
   const CustomTextField({
     super.key,
@@ -24,6 +25,7 @@ class CustomTextField extends StatefulWidget {
     this.controller,
     this.inputFormatters,
     this.prefix,
+    this.readOnly = false,
   });
 
   @override
@@ -92,6 +94,7 @@ class CustomTextFieldState extends State<CustomTextField> {
     return SizedBox(
       width: 300,
       child: TextField(
+        readOnly: widget.readOnly,
         focusNode: _focusNode,
         controller: widget.controller,
         obscureText: _isObscure,
@@ -104,6 +107,8 @@ class CustomTextFieldState extends State<CustomTextField> {
           errorText: _errorText,
           errorMaxLines: 2,
           labelStyle: TextStyle(color: grisOscuro),
+          filled: widget.readOnly,
+          fillColor: widget.readOnly ? Colors.grey[200] : null,
           floatingLabelStyle: TextStyle(
             color: verde,
             fontWeight: FontWeight.bold,
