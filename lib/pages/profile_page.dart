@@ -7,6 +7,8 @@ import 'package:ship_tracker/theme/theme.dart';
 import 'package:ship_tracker/components/bottom_navbar.dart';
 import 'package:ship_tracker/pages/home.dart';
 import 'package:ship_tracker/utils/rut_formatter.dart';
+import 'package:provider/provider.dart';
+import 'package:ship_tracker/providers/user_provider.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -29,8 +31,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final _phoneKey = GlobalKey<CustomTextFieldState>();
   final _emailKey = GlobalKey<CustomTextFieldState>();
   final _passwordKey = GlobalKey<CustomTextFieldState>();
-
-  bool _isSaving = false;
+  final _currentPasswordController = TextEditingController();
+  final _currentPasswordKey = GlobalKey<CustomTextFieldState>();
 
   Future<bool> _goBackToHome() async {
     Navigator.pushReplacement(
@@ -41,6 +43,23 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    _nameController.text = userProvider.firstName;
+    _lastNameController.text = userProvider.lastName;
+    _rutController.text = userProvider.rut;
+    _emailController.text = userProvider.email; 
+    
+    String rawPhone = userProvider.phone;
+    if (rawPhone.startsWith('+569')) {
+      _phoneController.text = rawPhone.substring(4);
+    } else {
+      _phoneController.text = rawPhone;
+    }
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _lastNameController.dispose();
@@ -48,6 +67,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _phoneController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _currentPasswordController.dispose(); 
     super.dispose();
   }
 
@@ -58,7 +78,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
       _rutKey.currentState?.validate(),
       _phoneKey.currentState?.validate(),
       _emailKey.currentState?.validate(),
-      _passwordKey.currentState?.validate(),
+      _passwordKey.currentState?.validate(), 
+      _currentPasswordKey.currentState?.validate(),
     ];
 
     if (errors.any((e) => e != null)) {
@@ -71,26 +92,68 @@ class _EditProfilePageState extends State<EditProfilePage> {
       return;
     }
 
-    setState(() => _isSaving = true);
-    await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
-    setState(() => _isSaving = false);
+    // Validación campo contraseña
+    if (_passwordKey.currentState?.validate() != null) {
+      return; 
+    }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('¡Perfil actualizado correctamente!'),
-        backgroundColor: verde,
-      ),
-    );
+    try {
+      final isValid = await Provider.of<UserProvider>(context, listen: false)
+        .verifyPassword(_currentPasswordController.text.trim());
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const HomePage()),
-    );
+      if (!isValid) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('La contraseña actual es incorrecta.'), 
+            backgroundColor: rojo
+          ),
+        );
+        return;
+      }
+
+      String? newPassword;
+      if (_passwordController.text.isNotEmpty) {
+        newPassword = _passwordController.text.trim();
+      }
+
+      await Provider.of<UserProvider>(context, listen: false).updateProfile(
+        firstName: _nameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
+        rut: _rutController.text.trim(),
+        phone: '+569${_phoneController.text.trim()}', // Formatear teléfono
+        password: newPassword,
+      );
+
+      if (!mounted) return;
+
+      // Limpiar campo contraseña
+      _currentPasswordController.clear();
+      _passwordController.clear();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('¡Datos actualizados correctamente!'),
+          backgroundColor: verde,
+        ),
+      );
+      
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al guardar: $e'), backgroundColor: rojo),
+      );
+    } 
   }
 
   @override
   Widget build(BuildContext context) {
+    final isLoading = context.select<UserProvider, bool>((p) => p.isLoading);
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -128,8 +191,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           body: Stack(
             children: [
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
                   child: Column(
@@ -238,27 +300,51 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         controller: _emailController,
                         validator: Validators.validateEmail,
                         keyboardType: TextInputType.emailAddress,
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 12),
+                      CustomTextField(
+                        key: _currentPasswordKey, // Asegúrate de haber definido esta Key y el Controller arriba
+                        labelText: 'Contraseña Actual (Obligatoria)', 
+                        obscureText: true,
+                        controller: _currentPasswordController,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Requerido para guardar cambios.';
+                          }
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 12),
                       CustomTextField(
                         key: _passwordKey,
-                        labelText: 'Contraseña',
+                        labelText: 'Nueva Contraseña',
                         obscureText: true,
                         controller: _passwordController,
-                        validator: Validators.validatePassword,
+                        validator: (value) {
+                          // Si está vacío, es válido
+                          if (value == null || value.isEmpty) {
+                            return null; 
+                          }
+                          // Si el usuario escribió algo, entonces sí validamos que sea seguro
+                          if (value.length < 8) {
+                            return 'Mínimo 8 caracteres';
+                          }
+                          return Validators.validatePassword(value); 
+                        },
                       ),
                       const SizedBox(height: 48),
                       CustomButton(
                         text: 'Guardar cambios',
                         backgroundColor: azulOscuro,
                         textColor: blanco,
-                        onPressed: _isSaving ? null : _saveProfile,
+                        onPressed: isLoading ? null : _saveProfile,
                       ),
                     ],
                   ),
                 ),
               ),
-              if (_isSaving)
+              if (isLoading)
                 Container(
                   color: Colors.black.withAlpha(128),
                   child: const Center(

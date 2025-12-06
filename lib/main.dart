@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'pages/login_page.dart'; 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'providers/order_provider.dart';
+import 'providers/user_provider.dart';
 
 
 Future<void> main() async {
@@ -17,6 +18,7 @@ Future<void> main() async {
     MultiProvider( 
       providers: [
         ChangeNotifierProvider(create: (_) => OrderProvider()),
+        ChangeNotifierProvider(create: (_) => UserProvider()..loadProfile()),
       ],
       child: const MyApp(),
     ),
