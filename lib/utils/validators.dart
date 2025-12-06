@@ -61,7 +61,7 @@ class Validators {
     if (!value.contains(RegExp(r'[a-z]'))) {
       return 'La contraseña debe contener al menos una minúscula.';
     }
-    if (!value.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
+    if (!value.contains(RegExp(r'''[!@#$%^&*(),.?":{}|<>[\]\\\/~`_+=;'-]'''))) {
       return 'La contraseña debe contener al menos un carácter especial.';
     }
     return null;
