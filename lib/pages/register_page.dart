@@ -175,49 +175,17 @@ class _RegisterPageState extends State<RegisterPage> {
                   children: [
                     const SizedBox(height: 16),
                     Center(
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          CircleAvatar(
-                            radius: 40,
-                            backgroundColor: gris,
-                            child: Icon(
-                              Icons.person_outline,
-                              size: 50,
-                              color: negro,
-                            ),
-                          ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: GestureDetector(
-                              onTap: () {},
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: verde,
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: negro,
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Icon(
-                                  Icons.edit,
-                                  color: blanco,
-                                  size: 18,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                      child: CircleAvatar(
+                        radius: 40,
+                        backgroundColor: gris,
+                        child: Icon(
+                          Icons.person_outline,
+                          size: 50,
+                          color: negro,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 24),
-
                     CustomTextField(
                       key: _nameKey,
                       labelText: 'Nombre',

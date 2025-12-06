@@ -9,6 +9,9 @@ import 'package:ship_tracker/pages/home.dart';
 import 'package:ship_tracker/utils/rut_formatter.dart';
 import 'package:provider/provider.dart';
 import 'package:ship_tracker/providers/user_provider.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:ship_tracker/components/user_avatar.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -40,6 +43,34 @@ class _EditProfilePageState extends State<EditProfilePage> {
       MaterialPageRoute(builder: (context) => const HomePage()),
     );
     return false;
+  }
+
+  // Seleccionar imagen de galeria
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+
+    if (image != null) {
+      final File imageFile = File(image.path);
+      _uploadSelectedImage(imageFile);
+    }
+  }
+
+  // Subir imagen
+  Future<void> _uploadSelectedImage(File imageFile) async {
+    try {
+      await Provider.of<UserProvider>(context, listen: false).uploadProfilePhoto(imageFile);
+       
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: const Text('Foto actualizada'), backgroundColor: verde),
+      );
+    } catch (e) {
+       if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error subiendo imagen: $e'), backgroundColor: rojo),
+      );
+    }
   }
 
   @override
@@ -152,7 +183,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = context.select<UserProvider, bool>((p) => p.isLoading);
+    final userProvider = Provider.of<UserProvider>(context);
+    final isLoading = userProvider.isLoading;
 
     return PopScope(
       canPop: false,
@@ -199,47 +231,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     children: [
                       const SizedBox(height: 16),
                       Center(
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            CircleAvatar(
-                              radius: 40,
-                              backgroundColor: gris,
-                              child: Icon(
-                                Icons.person_outline,
-                                size: 50,
-                                color: negro,
-                              ),
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: GestureDetector(
-                                onTap: () {
-
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.all(6),
-                                  decoration: BoxDecoration(
-                                    color: verde,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: negro,
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Icon(
-                                    Icons.edit,
-                                    color: blanco,
-                                    size: 18,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                        child: UserAvatar(
+                          radius: 50,
+                          photoUrl: userProvider.photoUrl, 
+                          onTap: isLoading ? null : _pickImage, 
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -304,7 +299,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       ),
                       const SizedBox(height: 12),
                       CustomTextField(
-                        key: _currentPasswordKey, // Asegúrate de haber definido esta Key y el Controller arriba
+                        key: _currentPasswordKey, 
                         labelText: 'Contraseña Actual (Obligatoria)', 
                         obscureText: true,
                         controller: _currentPasswordController,
@@ -322,11 +317,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         obscureText: true,
                         controller: _passwordController,
                         validator: (value) {
-                          // Si está vacío, es válido
                           if (value == null || value.isEmpty) {
                             return null; 
                           }
-                          // Si el usuario escribió algo, entonces sí validamos que sea seguro
                           if (value.length < 8) {
                             return 'Mínimo 8 caracteres';
                           }

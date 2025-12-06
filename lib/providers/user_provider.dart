@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -9,6 +10,7 @@ class UserProvider extends ChangeNotifier {
   String? _rut;
   String? _phone;
   String? _email;
+  String? _photoUrl;
   bool _isLoading = false;
 
   String get firstName => _firstName ?? '';
@@ -17,6 +19,7 @@ class UserProvider extends ChangeNotifier {
   String get rut => _rut ?? '';
   String get phone => _phone ?? '';
   String get email => _email ?? '';
+  String? get photoUrl => _photoUrl;
   bool get isLoading => _isLoading;
 
   // Cargar perfil del usuario actual
@@ -36,6 +39,7 @@ class UserProvider extends ChangeNotifier {
       _lastName = metadata?['last_name'] ?? '';
       _rut = metadata?['rut'] ?? '';
       _phone = metadata?['phone'] ?? ''; 
+      _photoUrl = metadata?['photo_url'];
 
     } catch (e) {
       print('Error cargando perfil: $e');
@@ -44,6 +48,48 @@ class UserProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  // Funcion para subir foto y actualizar perfil
+  Future<void> uploadProfilePhoto(File imageFile) async {
+    final user= _supabase.auth.currentUser;
+    if (user==null) return;
+
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      // Ruta del archivo en Supabase Storage
+      final fileExtension = imageFile.path.split('.').last;
+      final filePath = '${user.id}/avatar.$fileExtension';
+
+      // Subir el archivo a avatars
+      await _supabase.storage.from('avatars').upload(
+            filePath,
+            imageFile,
+            fileOptions: const FileOptions(upsert: true),
+          );
+
+      final imageUrl = _supabase.storage.from('avatars').getPublicUrl(filePath);
+      await _supabase.auth.updateUser(
+        UserAttributes(
+          data: {
+            'photo_url': imageUrl,
+          },
+        ),
+      );
+
+      _photoUrl = imageUrl;
+      print('Foto subida exitosamente: $imageUrl');
+
+    } catch (e) {
+      print('Error subiendo foto: $e');
+      rethrow; 
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
 
   // Verificar contraseña actual
   Future<bool> verifyPassword(String password) async {
