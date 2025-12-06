@@ -84,18 +84,39 @@ class _RegisterPageState extends State<RegisterPage> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('¡Registro exitoso! Por favor inicia sesión.'),
-          backgroundColor: verde,
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: Text(
+            'Verifica tu correo',
+            style: GoogleFonts.archivoBlack(color: verde),
+          ),
+          content: Text(
+            'El registro fue exitoso. Hemos enviado un enlace de confirmación a tu correo.\n\nDebes confirmarlo antes de iniciar sesión.',
+            style: GoogleFonts.inter(fontSize: 14),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'Entendido',
+                style: TextStyle(color: azulOscuro, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
         ),
       );
 
       // Redirigir al Login
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
-      );
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+        );
+      }
 
     } on AuthException catch (e) {
       // Traductor de errores

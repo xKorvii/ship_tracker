@@ -12,7 +12,9 @@ class AuthErrorTranslator {
       return 'El formato del correo no es válido.';
     } else if (message.contains('network request failed')) {
       return 'Error de conexión. Revisa tu internet.';
-    }  
+    } else if (message.contains('email not confirmed')) {
+      return 'El correo no ha sido confirmado. Por favor revisa tu bandeja de entrada.';
+    }
     // Mensaje por defecto 
     return 'Ocurrió un error: $originalMessage';
   }
