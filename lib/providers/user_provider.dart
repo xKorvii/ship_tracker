@@ -69,7 +69,9 @@ class UserProvider extends ChangeNotifier {
             fileOptions: const FileOptions(upsert: true),
           );
 
-      final imageUrl = _supabase.storage.from('avatars').getPublicUrl(filePath);
+      // obtener url de supabase
+      final urlBase = _supabase.storage.from('avatars').getPublicUrl(filePath);
+      final imageUrl = '$urlBase?v=${DateTime.now().millisecondsSinceEpoch}';;
       await _supabase.auth.updateUser(
         UserAttributes(
           data: {
