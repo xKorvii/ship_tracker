@@ -4,6 +4,8 @@ import 'package:ship_tracker/components/bottom_navbar.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ship_tracker/theme/theme.dart';
 import 'package:ship_tracker/pages/home.dart';
+import 'package:provider/provider.dart'; 
+import 'package:ship_tracker/providers/order_provider.dart'; 
 
 class StatsPage extends StatefulWidget {
   const StatsPage({super.key});
@@ -14,9 +16,14 @@ class StatsPage extends StatefulWidget {
 
 class _StatsPageState extends State<StatsPage> {
   final List<String> dias = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
-  final List<int> completados = [8, 6, 7, 10, 12, 8, 4];
-  final List<int> pendientes = [3, 2, 4, 3, 5, 2, 1];
-  final List<int> cancelados = [1, 1, 2, 1, 1, 0, 1];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<OrderProvider>(context, listen: false).fetchAndComputeStats();
+    });
+  }
 
   Future<bool> _goBackToHome() async {
     Navigator.pushReplacement(
@@ -35,294 +42,335 @@ class _StatsPageState extends State<StatsPage> {
           _goBackToHome();
         }
       },
-      child: Scaffold(
-        backgroundColor: blanco,
-        appBar: AppBar(
-          backgroundColor: verde,
-          foregroundColor: blanco,
-          elevation: 0,
-          automaticallyImplyLeading: true,
-          title: Text(
-            'Estadísticas',
-            style: GoogleFonts.archivoBlack(
-              fontSize: 20,
-              color: blanco,
+      child: Consumer<OrderProvider>(
+        builder: (context, orderProvider, child) {
+          final stats = orderProvider.statsData;
+
+          final completados = (stats['weeklySummary']?['completados'] as List<int>?) ?? List.filled(7, 0);
+          final pendientes = (stats['weeklySummary']?['pendientes'] as List<int>?) ?? List.filled(7, 0);
+          final cancelados = (stats['weeklySummary']?['cancelados'] as List<int>?) ?? List.filled(7, 0);
+          
+          final totalCompletadas = (stats['totals']?['Completado']?.toString()) ?? '0';
+          final totalPendientes = (stats['totals']?['Pendiente']?.toString()) ?? '0';
+          final totalCanceladas = (stats['totals']?['Cancelado']?.toString()) ?? '0';
+          
+          final monthlyRates = (stats['monthlyRates'] as List<int>?) ?? [0, 0, 0, 0, 0];
+          final hasData = stats['hasData'] as bool? ?? false;
+
+  
+          double maxY = 0;
+          for (int i = 0; i < 7; i++) {
+              final maxForDay = (completados[i] + pendientes[i] + cancelados[i]).toDouble();
+              if (maxForDay > maxY) {
+                  maxY = maxForDay;
+              }
+          }
+          if (maxY == 0) { maxY = 15; } else { maxY = (maxY * 1.2).ceilToDouble(); }
+
+
+          final List<FlSpot> lineSpots = List.generate(
+            monthlyRates.length, 
+            (index) => FlSpot(index.toDouble(), monthlyRates[index].toDouble())
+          );
+          
+          final List<LineChartBarData> lineBarsData = [
+            LineChartBarData(
+              isCurved: true,
+              color: verde,
+              barWidth: 3,
+              dotData: const FlDotData(show: true),
+              belowBarData: BarAreaData(show: false),
+              spots: lineSpots.isNotEmpty 
+                  ? lineSpots 
+                  : [const FlSpot(0, 0)],
             ),
-          ),
-          centerTitle: true,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
-            onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const HomePage()),
-              );
-            },
-          ),
-        ),
+          ];
 
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: blanco,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: negro,
-                        blurRadius: 5,
-                        offset: const Offset(2, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Pedidos (resumen semanal)',
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            'Últimos 7 días',
-                            style: TextStyle(fontSize: 12, color: grisOscuro),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      SizedBox(
-                        height: 250,
-                        child: BarChart(
-                          BarChartData(
-                            alignment: BarChartAlignment.spaceAround,
-                            maxY: 15,
-                            barTouchData: BarTouchData(enabled: false),
-                            titlesData: FlTitlesData(
-                              leftTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  reservedSize: 32,
-                                  interval: 5,
-                                  getTitlesWidget: (value, meta) => Text(
-                                    value.toInt().toString(),
-                                    style: const TextStyle(fontSize: 10),
-                                  ),
-                                ),
-                              ),
-                              bottomTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  getTitlesWidget: (value, meta) {
-                                    final index = value.toInt();
-                                    if (index >= 0 && index < dias.length) {
-                                      return Text(
-                                        dias[index],
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      );
-                                    }
-                                    return const SizedBox();
-                                  },
-                                ),
-                              ),
-                              rightTitles: const AxisTitles(
-                                  sideTitles: SideTitles(showTitles: false)),
-                              topTitles: const AxisTitles(
-                                  sideTitles: SideTitles(showTitles: false)),
-                            ),
-                            gridData: FlGridData(show: true, drawVerticalLine: false),
-                            borderData: FlBorderData(show: false),
-                            barGroups: List.generate(dias.length, (i) {
-                              return BarChartGroupData(
-                                x: i,
-                                barsSpace: 4,
-                                barRods: [
-                                  BarChartRodData(
-                                    toY: completados[i].toDouble(),
-                                    color: verde,
-                                    width: 10,
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  BarChartRodData(
-                                    toY: pendientes[i].toDouble(),
-                                    color: verde,
-                                    width: 10,
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  BarChartRodData(
-                                    toY: cancelados[i].toDouble(),
-                                    color: rojo,
-                                    width: 10,
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                ],
-                              );
-                            }),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+          final List<BarChartGroupData> barGroups = List.generate(dias.length, (i) {
+            return BarChartGroupData(
+              x: i,
+              barsSpace: 4,
+              barRods: [
+                BarChartRodData(
+                  toY: completados[i].toDouble(), 
+                  color: verde,
+                  width: 10,
+                  borderRadius: BorderRadius.circular(4),
                 ),
+                BarChartRodData(
+                  toY: pendientes[i].toDouble(), 
+                  color: amarillo, 
+                  width: 10,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                BarChartRodData(
+                  toY: cancelados[i].toDouble(),
+                  color: rojo,
+                  width: 10,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ],
+            );
+          });
+          
+          if (orderProvider.isLoading && !hasData) {
+            return Scaffold(
+              backgroundColor: blanco,
+              appBar: AppBar(backgroundColor: verde, foregroundColor: blanco, elevation: 0, title: Text('Estadísticas', style: GoogleFonts.archivoBlack(fontSize: 20, color: blanco)), centerTitle: true),
+              body: const Center(child: CircularProgressIndicator()),
+              bottomNavigationBar: const BottomNavBar(selectedIndex: 2),
+            );
+          }
+          
+          if (!hasData && !orderProvider.isLoading) {
+            return Scaffold(
+              backgroundColor: blanco,
+              appBar: AppBar(backgroundColor: verde, foregroundColor: blanco, elevation: 0, title: Text('Estadísticas', style: GoogleFonts.archivoBlack(fontSize: 20, color: blanco)), centerTitle: true),
+              body: Center(child: Text("No hay datos de pedidos para mostrar estadísticas.", style: TextStyle(color: negro))),
+              bottomNavigationBar: const BottomNavBar(selectedIndex: 2),
+            );
+          }
 
+          return Scaffold(
+            backgroundColor: blanco,
+            appBar: AppBar(
+              backgroundColor: verde,
+              foregroundColor: blanco,
+              elevation: 0,
+              automaticallyImplyLeading: true,
+              title: Text(
+                'Estadísticas',
+                style: GoogleFonts.archivoBlack(
+                  fontSize: 20,
+                  color: blanco,
+                ),
+              ),
+              centerTitle: true,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const HomePage()),
+                  );
+                },
+              ),
+            ),
 
-                const SizedBox(height: 20),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            body: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: SingleChildScrollView(
+                child: Column(
                   children: [
-                    _MetricCard(
-                      color: verde,
-                      icon: Icons.check,
-                      title: 'Completadas',
-                      value: '35',
-                    ),
-                    _MetricCard(
-                      color: verde,
-                      icon: Icons.hourglass_bottom,
-                      title: 'Pendientes',
-                      value: '15',
-                    ),
-                    _MetricCard(
-                      color: rojo,
-                      icon: Icons.close,
-                      title: 'Canceladas',
-                      value: '8',
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 30),
-
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: blanco,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: negro,
-                        blurRadius: 5,
-                        offset: const Offset(2, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Tasa de éxito',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 14),
-                          ),
-                          Text(
-                            'Últimos 5 meses',
-                            style: TextStyle(fontSize: 12, color: grisOscuro),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: blanco,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: negro,
+                            blurRadius: 5,
+                            offset: const Offset(2, 2),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10),
-                      SizedBox(
-                        height: 160,
-                        child: LineChart(
-                          LineChartData(
-                            gridData: FlGridData(
-                              show: true,
-                              drawVerticalLine: false,
-                              getDrawingHorizontalLine: (value) => FlLine(
-                                color: gris,
-                                strokeWidth: 1,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Pedidos (resumen semanal)',
+                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                               ),
-                            ),
-                            titlesData: FlTitlesData(
-                              leftTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  reservedSize: 28,
-                                  getTitlesWidget: (value, meta) {
-                                    if (value % 10 == 0 && value >= 70) {
-                                      return Text(
-                                        value.toInt().toString(),
-                                        style: const TextStyle(fontSize: 10),
-                                      );
-                                    }
-                                    return const SizedBox();
-                                  },
-                                ),
-                              ),
-                              bottomTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  interval: 1,
-                                  getTitlesWidget: (value, meta) {
-                                    switch (value.toInt()) {
-                                      case 0:
-                                        return const Text('Oct',
-                                            style: TextStyle(fontSize: 10));
-                                      case 1:
-                                        return const Text('Nov',
-                                            style: TextStyle(fontSize: 10));
-                                      case 2:
-                                        return const Text('Dic',
-                                            style: TextStyle(fontSize: 10));
-                                      case 3:
-                                        return const Text('Ene',
-                                            style: TextStyle(fontSize: 10));
-                                      case 4:
-                                        return const Text('Feb',
-                                            style: TextStyle(fontSize: 10));
-                                      default:
-                                        return const SizedBox();
-                                    }
-                                  },
-                                ),
-                              ),
-                              topTitles: const AxisTitles(
-                                  sideTitles: SideTitles(showTitles: false)),
-                              rightTitles: const AxisTitles(
-                                  sideTitles: SideTitles(showTitles: false)),
-                            ),
-                            borderData: FlBorderData(show: false),
-                            minY: 65,
-                            maxY: 105,
-                            lineBarsData: [
-                              LineChartBarData(
-                                isCurved: true,
-                                color: verde,
-                                barWidth: 3,
-                                dotData: FlDotData(show: true),
-                                belowBarData: BarAreaData(show: false),
-                                spots: const [
-                                  FlSpot(0, 70),
-                                  FlSpot(1, 85),
-                                  FlSpot(2, 78),
-                                  FlSpot(3, 90),
-                                  FlSpot(4, 100),
-                                ],
+                              Text(
+                                'Últimos 7 días',
+                                style: TextStyle(fontSize: 12, color: grisOscuro),
                               ),
                             ],
                           ),
-                        ),
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            height: 250,
+                            child: BarChart(
+                              BarChartData(
+                                alignment: BarChartAlignment.spaceAround,
+                                maxY: maxY, 
+                                barTouchData: BarTouchData(enabled: false),
+                                titlesData: FlTitlesData(
+                                  leftTitles: AxisTitles(
+                                    sideTitles: SideTitles(
+                                      showTitles: true,
+                                      reservedSize: 32,
+                                      interval: (maxY / 3).ceilToDouble() > 0 ? (maxY / 3).ceilToDouble() : 5, 
+                                      getTitlesWidget: (value, meta) => Text(
+                                        value.toInt().toString(),
+                                        style: const TextStyle(fontSize: 10),
+                                      ),
+                                    ),
+                                  ),
+                                  bottomTitles: AxisTitles(
+                                    sideTitles: SideTitles(
+                                      showTitles: true,
+                                      getTitlesWidget: (value, meta) {
+                                        final index = value.toInt();
+                                        if (index >= 0 && index < dias.length) {
+                                          return Text(
+                                            dias[index],
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          );
+                                        }
+                                        return const SizedBox();
+                                      },
+                                    ),
+                                  ),
+                                  rightTitles: const AxisTitles(
+                                      sideTitles: SideTitles(showTitles: false)),
+                                  topTitles: const AxisTitles(
+                                      sideTitles: SideTitles(showTitles: false)),
+                                ),
+                                gridData: FlGridData(show: true, drawVerticalLine: false),
+                                borderData: FlBorderData(show: false),
+                                barGroups: barGroups, 
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+                    ),
 
-        bottomNavigationBar: const BottomNavBar(selectedIndex: 2),
+
+                    const SizedBox(height: 20),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _MetricCard(
+                          color: verde,
+                          icon: Icons.check,
+                          title: 'Completadas',
+                          value: totalCompletadas, 
+                        ),
+                        _MetricCard(
+                          color: amarillo, 
+                          icon: Icons.hourglass_bottom,
+                          title: 'Pendientes',
+                          value: totalPendientes, 
+                        ),
+                        _MetricCard(
+                          color: rojo,
+                          icon: Icons.close,
+                          title: 'Canceladas',
+                          value: totalCanceladas, 
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 30),
+
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: blanco,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: negro,
+                            blurRadius: 5,
+                            offset: const Offset(2, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Tasa de éxito mensual',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 14),
+                              ),
+                              Text(
+                                'Histórico (últimos 5 meses)',
+                                style: TextStyle(fontSize: 12, color: grisOscuro),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            height: 160,
+                            child: LineChart(
+                              LineChartData(
+                                gridData: FlGridData(
+                                  show: true,
+                                  drawVerticalLine: false,
+                                  getDrawingHorizontalLine: (value) => FlLine(
+                                    color: gris,
+                                    strokeWidth: 1,
+                                  ),
+                                ),
+                                titlesData: FlTitlesData(
+                                  leftTitles: AxisTitles(
+                                    sideTitles: SideTitles(
+                                      showTitles: true,
+                                      reservedSize: 28,
+                                      interval: 10,
+                                      getTitlesWidget: (value, meta) {
+                                        if (value % 10 == 0 && value >= 0) {
+                                          return Text(
+                                            '${value.toInt()}%',
+                                            style: const TextStyle(fontSize: 10),
+                                          );
+                                        }
+                                        return const SizedBox();
+                                      },
+                                    ),
+                                  ),
+                                  bottomTitles: AxisTitles(
+                                    sideTitles: SideTitles(
+                                      showTitles: true,
+                                      interval: 1,
+                                      getTitlesWidget: (value, meta) {
+                                        switch (value.toInt()) {
+                                          case 0: return const Text('P1', style: TextStyle(fontSize: 10));
+                                          case 1: return const Text('P2', style: TextStyle(fontSize: 10));
+                                          case 2: return const Text('P3', style: TextStyle(fontSize: 10));
+                                          case 3: return const Text('P4', style: TextStyle(fontSize: 10));
+                                          case 4: return const Text('P5', style: TextStyle(fontSize: 10));
+                                          default: return const SizedBox();
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                  topTitles: const AxisTitles(
+                                      sideTitles: SideTitles(showTitles: false)),
+                                  rightTitles: const AxisTitles(
+                                      sideTitles: SideTitles(showTitles: false)),
+                                ),
+                                borderData: FlBorderData(show: false),
+                                minY: 0,
+                                maxY: 105,
+                                lineBarsData: lineBarsData, 
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            bottomNavigationBar: const BottomNavBar(selectedIndex: 2),
+          );
+        },
       ),
     );
   }

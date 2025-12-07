@@ -22,7 +22,7 @@ class UserProvider extends ChangeNotifier {
   String? get photoUrl => _photoUrl;
   bool get isLoading => _isLoading;
 
-  // Cargar perfil del usuario actual
+  // cargar perfil del usuario actual
   Future<void> loadProfile() async {
     final user = _supabase.auth.currentUser;
     if (user == null) return;
