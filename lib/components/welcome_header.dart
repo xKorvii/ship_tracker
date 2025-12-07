@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:ship_tracker/theme/theme.dart';
 import 'package:ship_tracker/providers/user_provider.dart';
+import 'package:ship_tracker/components/user_avatar.dart';
 
 class WelcomeHeader extends StatelessWidget {
   const WelcomeHeader({super.key});
@@ -19,10 +20,9 @@ class WelcomeHeader extends StatelessWidget {
           ),
           child: Row(
             children: [
-              CircleAvatar(
-                radius: 22,
-                backgroundColor:verdeClaro,
-                backgroundImage: AssetImage('images/profilepic.jpg'),
+              UserAvatar( 
+              radius: 22,
+              photoUrl: userProvider.photoUrl, 
               ),
               SizedBox(width: 10),
               Column(
