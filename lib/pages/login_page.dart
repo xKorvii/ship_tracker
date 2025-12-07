@@ -7,6 +7,8 @@ import '../components/button.dart';
 import 'package:ship_tracker/theme/theme.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:ship_tracker/utils/auth_errors.dart';
+import 'package:provider/provider.dart';
+import 'package:ship_tracker/providers/user_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -114,6 +116,7 @@ class _LoginPageState extends State<LoginPage> {
                         );
 
                         if (mounted) {
+                          await Provider.of<UserProvider>(context, listen: false).loadProfile();
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(builder: (context) => const HomePage()),

@@ -9,6 +9,8 @@ import 'package:ship_tracker/pages/login_page.dart';
 import 'package:ship_tracker/theme/theme.dart';
 import 'package:provider/provider.dart';
 import 'package:ship_tracker/providers/order_provider.dart';
+import 'package:ship_tracker/providers/user_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -81,7 +83,18 @@ class _HomePageState extends State<HomePage> {
                 onPressed: () async {
                   final confirm = await _confirmLogout();
                   if (confirm) {
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginPage()));
+                    // cerrar sesión en Supabase
+                    await Supabase.instance.client.auth.signOut();
+
+                    if (!context.mounted) return;
+
+                    Provider.of<OrderProvider>(context, listen: false).clearData();
+                    Provider.of<UserProvider>(context, listen: false).clearData();
+
+                    Navigator.pushReplacement(
+                      context, 
+                      MaterialPageRoute(builder: (_) => const LoginPage())
+                    );
                   }
                 },
               ),
