@@ -15,7 +15,7 @@ class UserProvider extends ChangeNotifier {
 
   String get firstName => _firstName ?? '';
   String get lastName => _lastName ?? '';
-  String get fullName => '$_firstName $_lastName';
+  String get fullName => '$firstName $lastName'.trim();
   String get rut => _rut ?? '';
   String get phone => _phone ?? '';
   String get email => _email ?? '';
@@ -145,5 +145,14 @@ class UserProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+  void clearData() {
+    _firstName = null;
+    _lastName = null;
+    _rut = null;
+    _phone = null;
+    _email = null;
+    _photoUrl = null;
+    notifyListeners();
   }
 }

@@ -85,4 +85,9 @@ class OrderProvider extends ChangeNotifier {
       rethrow; // Re-lanzar error para manejarlo en la UI 
     }
   }
+  void clearData() {
+    _orders = [];
+    _isLoading = false;
+    notifyListeners();
+  }
 }
