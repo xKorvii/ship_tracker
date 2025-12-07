@@ -26,6 +26,7 @@ class _HomePageState extends State<HomePage> {
     // Cargar datos al iniciar la pantalla
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<OrderProvider>(context, listen: false).fetchOrders();
+      Provider.of<OrderProvider>(context, listen: false).fetchAndComputeStats();
     });
   }
 

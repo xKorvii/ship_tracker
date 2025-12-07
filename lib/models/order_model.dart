@@ -8,6 +8,7 @@ class OrderModel {
   final String clientRut;
   final String deliveryWindow;
   final String notes;
+  final DateTime? createdAt; 
 
   OrderModel({
     this.id,
@@ -19,6 +20,7 @@ class OrderModel {
     required this.clientRut,
     required this.deliveryWindow,
     required this.notes,
+    this.createdAt, 
   });
 
   // Convertir de JSON a Objeto
@@ -33,10 +35,10 @@ class OrderModel {
       clientRut: map['client_rut'] ?? '',
       deliveryWindow: map['delivery_window'] ?? '',
       notes: map['notes'] ?? '',
+      createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
     );
   }
 
-  // Convertir de Objeto a JSON
   Map<String, dynamic> toMap() {
     return {
       'user_id': userId,
