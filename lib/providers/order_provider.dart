@@ -90,6 +90,7 @@ class OrderProvider extends ChangeNotifier {
         notes: notes,
         latitude: latitude,
         longitude: longitude,
+        createdAt: DateTime.now(),
       );
 
       await _supabase.from('orders').insert(newOrder.toMap());

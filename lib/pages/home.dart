@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:ship_tracker/providers/order_provider.dart';
 import 'package:ship_tracker/providers/user_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:ship_tracker/models/order_model.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -21,6 +22,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  String _searchQuery = '';
   @override
   void initState() {
     super.initState();
@@ -52,14 +54,29 @@ class _HomePageState extends State<HomePage> {
     return result ?? false;
   }
 
+  // Función para filtrar pedidos pendientes
+  List<OrderModel> _getFilteredPendingOrders(List<OrderModel> allOrders) {
+    var list = allOrders.where((o) => o.status == 'Pendiente').toList();
+
+    // filtramos adicionalmente por ID o Nombre
+    if (_searchQuery.isNotEmpty) {
+      final query = _searchQuery.toLowerCase();
+      list = list.where((order) {
+        final code = order.code.toLowerCase();
+        final name = order.clientName.toLowerCase();
+        return code.contains(query) || name.contains(query);
+      }).toList();
+    }
+    
+    return list;
+  }
+
   @override
   Widget build(BuildContext context) {
     // Obtener datos del provider
     final orderProvider = Provider.of<OrderProvider>(context);
 
-    final pedidosPendientes = orderProvider.orders
-        .where((o) => o.status == 'Pendiente')
-        .toList();
+    final pedidosPendientes = _getFilteredPendingOrders(orderProvider.orders);
 
     return WillPopScope(
       onWillPop: () async => false,
@@ -112,14 +129,27 @@ class _HomePageState extends State<HomePage> {
               children: [
                 const WelcomeHeader(),
                 const SizedBox(height: 16),
-                const Search(),
+                Search(
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
+                ),
                 const SizedBox(height: 10),
                 
                 Expanded(
                   child: orderProvider.isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : pedidosPendientes.isEmpty
-                          ?  Center(child:  Text("No tienes pedidos pendientes", style: TextStyle(color: grisOscuro)))
+                          ? Center(
+                              child: Text(
+                                _searchQuery.isEmpty 
+                                  ? "No tienes pedidos pendientes" 
+                                  : "No se encontraron pedidos",
+                                style: TextStyle(color: grisOscuro),
+                              )
+                            )
                           : ListView.builder(
                               itemCount: pedidosPendientes.length, 
                               itemBuilder: (context, index) {

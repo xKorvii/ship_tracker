@@ -11,6 +11,7 @@ import 'package:ship_tracker/theme/theme.dart';
 import 'package:provider/provider.dart';
 //import 'package:ship_tracker/components/orderby.dart';
 import 'package:ship_tracker/providers/order_provider.dart';
+import 'package:ship_tracker/models/order_model.dart';
 
 class OrdersPage extends StatefulWidget {
   const OrdersPage({super.key});
@@ -20,6 +21,9 @@ class OrdersPage extends StatefulWidget {
 }
 
 class _OrdersPageState extends State<OrdersPage> {
+  String _searchQuery = '';
+  bool _showNewestFirst = true;// mas recientes primero
+
   Future<bool> _goBackToHome() async {
     Navigator.pushReplacement(
       context,
@@ -28,13 +32,81 @@ class _OrdersPageState extends State<OrdersPage> {
     return false; 
   }
 
+  // Función para mostrar el menú de ordenamiento
+  void _showSortOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: blanco,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Wrap(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text('Ordenar por fecha', style: GoogleFonts.archivoBlack(fontSize: 18)),
+              ),
+              ListTile(
+                leading: Icon(Icons.arrow_downward, color: verde),
+                title: const Text('Más recientes primero'),
+                trailing: _showNewestFirst ? Icon(Icons.check, color: verde) : null,
+                onTap: () {
+                  setState(() => _showNewestFirst = true);
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.arrow_upward, color: verde),
+                title: const Text('Más antiguos primero'),
+                trailing: !_showNewestFirst ? Icon(Icons.check, color: verde) : null,
+                onTap: () {
+                  setState(() => _showNewestFirst = false);
+                  Navigator.pop(context);
+                },
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+    List<OrderModel> _getFilteredOrders(List<OrderModel> allOrders) {
+      // filtro solo el historial
+      var list = allOrders.where((o) => o.status != 'Pendiente').toList();
+
+      // aplicar busqueda
+      if (_searchQuery.isNotEmpty) {
+        final query = _searchQuery.toLowerCase();
+        list = list.where((order) {
+          final code = order.code.toLowerCase();
+          final name = order.clientName.toLowerCase();
+          return code.contains(query) || name.contains(query);
+        }).toList();
+      }
+
+      // aplicar ordenamiento por fecha
+      list.sort((a, b) {
+        final dateA = a.createdAt ?? DateTime(0);
+        final dateB = b.createdAt ?? DateTime(0);
+        
+        return _showNewestFirst 
+            ? dateB.compareTo(dateA)
+            : dateA.compareTo(dateB);
+      });
+
+      return list;
+    }
+
   @override
   Widget build(BuildContext context) {
     final orderProvider = Provider.of<OrderProvider>(context);
-    
-    final historial = orderProvider.orders
-        .where((o) => o.status != 'Pendiente')
-        .toList();
+
+    // usar la función para obtener la lista procesadas
+    final historialFiltrado = _getFilteredOrders(orderProvider.orders);
         
     return PopScope(
       canPop: false,
@@ -79,26 +151,40 @@ class _OrdersPageState extends State<OrdersPage> {
               children: [
                 const WelcomeHeader(),
                 const SizedBox(height: 16),
-                const Search(),
+                Search(
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
+                ),
                 const SizedBox(height: 10),
-                const OrderFilter(),
+                OrderFilter(
+                  onTap: _showSortOptions,
+                ),
                 const SizedBox(height: 16),
                 
                 Expanded(
-                  child: historial.isEmpty
-                      ? Center(child: Text("No hay historial de pedidos", style: TextStyle(color: grisOscuro)))
+                  child: historialFiltrado.isEmpty
+                      ? Center(
+                          child: Text(
+                            _searchQuery.isEmpty 
+                                ? "No hay historial de pedidos" 
+                                : "No se encontraron resultados",
+                            style: TextStyle(color: grisOscuro),
+                          ),
+                        )
                       : ListView.builder(
-                          itemCount: historial.length,
+                          itemCount: historialFiltrado.length,
                           itemBuilder: (context, index) {
-                            final order = historial[index];
+                            final order = historialFiltrado[index];
                             return OrderCard(
                               orderId: order.id!,
                               codigo: order.code,
                               direccion: order.address,
                               estado: order.status,
-                              // Color dinámico según estado
                               estadoColor: order.status == 'Completado' ? verdeClaro : rojo,
-                              mostrarBotones: false, 
+                              mostrarBotones: false,
                               clientName: order.clientName,
                               clientRut: order.clientRut,
                               deliveryWindow: order.deliveryWindow,
