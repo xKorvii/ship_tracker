@@ -45,14 +45,52 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return false;
   }
 
-  // Seleccionar imagen de galeria
-  Future<void> _pickImage() async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+  // Seleccionar imagen
+  void _pickImage() {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Galería'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _getImageFromSource(ImageSource.gallery);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Cámara'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _getImageFromSource(ImageSource.camera);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
-    if (image != null) {
-      final File imageFile = File(image.path);
-      _uploadSelectedImage(imageFile);
+  // Procesa la imagen según la fuente elegida
+  Future<void> _getImageFromSource(ImageSource source) async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(source: source, imageQuality: 80);
+
+      if (image != null) {
+        final File imageFile = File(image.path);
+        _uploadSelectedImage(imageFile);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al obtener imagen: $e'), backgroundColor: rojo),
+      );
     }
   }
 
