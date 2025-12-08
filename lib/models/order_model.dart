@@ -8,8 +8,9 @@ class OrderModel {
   final String clientRut;
   final String deliveryWindow;
   final String notes;
-  final DateTime? createdAt; 
-
+  final DateTime? createdAt;
+  final double latitude;
+  final double longitude;
   OrderModel({
     this.id,
     required this.userId,
@@ -21,6 +22,8 @@ class OrderModel {
     required this.deliveryWindow,
     required this.notes,
     this.createdAt, 
+    required this.latitude,
+    required this.longitude,
   });
 
   // Convertir de JSON a Objeto
@@ -35,9 +38,9 @@ class OrderModel {
       clientRut: map['client_rut'] ?? '',
       deliveryWindow: map['delivery_window'] ?? '',
       notes: map['notes'] ?? '',
-      createdAt: map['created_at'] != null 
-          ? DateTime.parse(map['created_at']).toLocal() 
-          : null,
+      createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
+      latitude: map['latitude'] is num ? map['latitude'].toDouble() : null, 
+      longitude: map['longitude'] is num ? map['longitude'].toDouble() : null, 
     );
   }
 
@@ -51,7 +54,8 @@ class OrderModel {
       'client_rut': clientRut,
       'delivery_window': deliveryWindow,
       'notes': notes,
-      if (createdAt != null) 'created_at': createdAt!.toIso8601String(),
+      'latitude': latitude,
+      'longitude': longitude, 
     };
   }
 }

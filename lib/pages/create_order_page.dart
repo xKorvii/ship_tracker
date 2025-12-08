@@ -7,6 +7,10 @@ import '../components/button.dart';
 import 'package:provider/provider.dart'; 
 import 'package:ship_tracker/providers/order_provider.dart';
 import 'package:ship_tracker/utils/rut_formatter.dart';
+import 'package:latlong2/latlong.dart';      
+import 'package:geocoding/geocoding.dart';   
+import 'map_picker_page.dart';             
+
 
 class CreateOrderPage extends StatefulWidget {
   const CreateOrderPage({super.key});
@@ -19,25 +23,24 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
   final _idController = TextEditingController();
   final _nameController = TextEditingController();
   final _rutController = TextEditingController();
-  final _addressController = TextEditingController();
   final _timeController = TextEditingController(); 
   final _notesController = TextEditingController();
 
   final _idKey = GlobalKey<CustomTextFieldState>();
   final _nameKey = GlobalKey<CustomTextFieldState>();
   final _rutKey = GlobalKey<CustomTextFieldState>();
-  final _addressKey = GlobalKey<CustomTextFieldState>();
   final _timeKey = GlobalKey<CustomTextFieldState>();
   final _notesKey = GlobalKey<CustomTextFieldState>();
 
   bool _isSaving = false;
+  LatLng? _selectedLatLng;
+  String _addressText = ''; 
 
   @override
   void dispose() {
     _idController.dispose();
     _nameController.dispose();
     _rutController.dispose();
-    _addressController.dispose();
     _timeController.dispose();
     _notesController.dispose();
     super.dispose();
@@ -74,19 +77,52 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
     }
   }
 
+  // Abre pantalla para seleccionar mapa
+  void _pickLocation() async {
+    final LatLng? pickedLocation = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const MapPickerPage()),
+    );
+
+    if (pickedLocation != null) {
+      setState(() {
+        _selectedLatLng = pickedLocation;
+        _addressText = 'Procesando dirección...';
+      });
+
+      // geocodificacion inversa 
+      try {
+        List<Placemark> placemarks = await placemarkFromCoordinates(
+          pickedLocation.latitude,
+          pickedLocation.longitude,
+        );
+        if (placemarks.isNotEmpty) {
+          final place = placemarks.first;
+          final address = '${place.thoroughfare ?? ''} ${place.name ?? ''}, ${place.locality ?? ''}, ${place.country ?? ''}';
+          setState(() {
+            _addressText = address.trim().isEmpty ? 'Ubicación precisa seleccionada' : address;
+          });
+        }
+      } catch (e) {
+        setState(() {
+          _addressText = 'Coordenadas: ${pickedLocation.latitude.toStringAsFixed(4)}, ${pickedLocation.longitude.toStringAsFixed(4)}';
+        });
+      }
+    }
+  }
+
   Future<void> _saveOrder() async {
     final errors = [
       _idKey.currentState?.validate(),
       _nameKey.currentState?.validate(),
       _rutKey.currentState?.validate(),
-      _addressKey.currentState?.validate(),
       _timeKey.currentState?.validate(),
     ];
 
-    if (errors.any((e) => e != null)) {
+    if (errors.any((e) => e != null) || _selectedLatLng == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Por favor, completa correctamente todos los campos obligatorios.'),
+          content: Text('Por favor completa todos los campos y selecciona una ubicación.'),
           backgroundColor: rojo,
         ),
       );
@@ -96,43 +132,48 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
     setState(() => _isSaving = true);
 
     try {
+      final placemarks = await placemarkFromCoordinates(
+        _selectedLatLng!.latitude,
+        _selectedLatLng!.longitude,
+      );
+
+      String finalAddress = "Dirección desconocida";
+
+      if (placemarks.isNotEmpty) {
+        final p = placemarks.first;
+        finalAddress =
+            "${p.street ?? ''} ${p.name ?? ''}, ${p.locality ?? ''}, ${p.country ?? ''}".trim();
+      }
+
+
       await Provider.of<OrderProvider>(context, listen: false).addOrder(
         code: _idController.text.trim(),
-        address: _addressController.text.trim(),
+        address: finalAddress,
         clientName: _nameController.text.trim(),
         clientRut: _rutController.text.trim(),
         deliveryWindow: _timeController.text.trim(),
         notes: _notesController.text.trim(),
+        latitude: _selectedLatLng!.latitude,
+        longitude: _selectedLatLng!.longitude,
       );
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('¡Pedido guardado exitosamente!'),
-          backgroundColor: verdeClaro,
-        ),
+        SnackBar(content: Text("¡Pedido guardado exitosamente!"), backgroundColor: verdeClaro),
       );
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const HomePage()),
       );
-      
+
     } catch (e) {
-      // Manejo de errores reales
-      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al guardar: $e'), 
-          backgroundColor: rojo
-        ),
+        SnackBar(content: Text("Error al guardar: $e"), backgroundColor: rojo),
       );
     } finally {
-      // Asegura que el loading se apague
-      if (mounted) {
-        setState(() => _isSaving = false);
-      }
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -224,16 +265,38 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    CustomTextField(
-                      key: _addressKey,
-                      labelText: 'Dirección de entrega',
-                      controller: _addressController,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'La dirección de entrega es obligatoria.';
-                        }
-                        return null;
-                      },
+
+                    GestureDetector(
+                      onTap: _pickLocation,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                              color: _selectedLatLng == null ? gris : verde),
+                          borderRadius: BorderRadius.circular(10),
+                          color: blanco,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.map, 
+                              color: _selectedLatLng == null ? grisOscuro : verde
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                _selectedLatLng == null 
+                                    ? 'Toca para seleccionar ubicación en el mapa *'
+                                    : _addressText.isEmpty ? 'Ubicación seleccionada' : _addressText,
+                                style: TextStyle(
+                                  color: _selectedLatLng == null ? grisOscuro : negro,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 12),
 

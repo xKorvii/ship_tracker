@@ -6,6 +6,8 @@ import '../components/button.dart';
 import 'package:ship_tracker/theme/theme.dart';
 import 'package:provider/provider.dart';
 import 'package:ship_tracker/providers/order_provider.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 class OrderDetailModal extends StatelessWidget {
   final bool mostrarBotones;
@@ -16,6 +18,9 @@ class OrderDetailModal extends StatelessWidget {
   final String clientRut;
   final String deliveryWindow;
   final String notes;
+  final double latitude;
+  final double longitude;
+
 
   const OrderDetailModal({
     super.key,
@@ -27,6 +32,8 @@ class OrderDetailModal extends StatelessWidget {
     required this.clientRut,
     required this.deliveryWindow,
     required this.notes,
+    required this.latitude,     
+    required this.longitude,
   });
 
   @override
@@ -115,11 +122,35 @@ class OrderDetailModal extends StatelessWidget {
           Expanded(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                'images/map.jpg',
-                fit: BoxFit.cover,
-                width: double.infinity,
-              ),
+              child: FlutterMap(
+                options: MapOptions(
+                  initialCenter: LatLng(latitude, longitude),
+                  initialZoom: 16.0,
+                  interactionOptions: const InteractionOptions(
+                    flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
+                  ),
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    userAgentPackageName: 'com.shiptracker.app',
+                  ),
+                  MarkerLayer(
+                    markers: [
+                      Marker(
+                        point: LatLng(latitude, longitude),
+                        width: 40,
+                        height: 40,
+                        child: const Icon(
+                          Icons.location_on,
+                          color: Colors.red,
+                          size: 36,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              )
             ),
           ),
           

@@ -103,7 +103,6 @@ class _OrdersPageState extends State<OrdersPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Obtener datos
     final orderProvider = Provider.of<OrderProvider>(context);
 
     // usar la función para obtener la lista procesadas
@@ -190,6 +189,8 @@ class _OrdersPageState extends State<OrdersPage> {
                               clientRut: order.clientRut,
                               deliveryWindow: order.deliveryWindow,
                               notes: order.notes,
+                              latitude: order.latitude,
+                              longitude: order.longitude,
                             );
                           },
                         ),
