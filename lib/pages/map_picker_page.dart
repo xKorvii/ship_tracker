@@ -77,8 +77,8 @@ class _MapPickerPageState extends State<MapPickerPage> {
               initialCenter: initialCenter,
               initialZoom: 15.0,
               onPositionChanged: (position, hasGesture) {
-                if (hasGesture && position.center != null) {
-                  _updateLocation(position.center!);
+                if (hasGesture) {
+                  _updateLocation(position.center);
                 }
               },
             ),

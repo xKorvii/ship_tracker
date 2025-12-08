@@ -54,6 +54,7 @@ class OrderModel {
       'client_rut': clientRut,
       'delivery_window': deliveryWindow,
       'notes': notes,
+      if (createdAt != null) 'created_at': createdAt!.toIso8601String(),
       'latitude': latitude,
       'longitude': longitude, 
     };
