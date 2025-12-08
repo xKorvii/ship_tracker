@@ -12,7 +12,7 @@ class OrderProvider extends ChangeNotifier {
   Map<String, dynamic> _statsData = {
     'totals': {'Completado': '0', 'Pendiente': '0', 'Cancelado': '0'},
     'weeklySummary': {'completados': List<int>.filled(7, 0), 'pendientes': List<int>.filled(7, 0), 'cancelados': List<int>.filled(7, 0)},
-    'monthlyRates': [],
+    'monthlyRates': <int>[],
     'hasData': false,
   };
 
@@ -72,6 +72,8 @@ class OrderProvider extends ChangeNotifier {
     required String clientRut,
     required String deliveryWindow,
     required String notes,
+    required double latitude,
+    required double longitude,
   }) async {
     final user = _supabase.auth.currentUser;
     if (user == null) return;
@@ -86,6 +88,8 @@ class OrderProvider extends ChangeNotifier {
         clientRut: clientRut,
         deliveryWindow: deliveryWindow,
         notes: notes,
+        latitude: latitude,
+        longitude: longitude,
       );
 
       await _supabase.from('orders').insert(newOrder.toMap());

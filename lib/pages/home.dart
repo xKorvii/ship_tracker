@@ -12,6 +12,7 @@ import 'package:ship_tracker/providers/order_provider.dart';
 import 'package:ship_tracker/providers/user_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -118,7 +119,7 @@ class _HomePageState extends State<HomePage> {
                   child: orderProvider.isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : pedidosPendientes.isEmpty
-                          ? const Center(child: Text("No tienes pedidos pendientes"))
+                          ?  Center(child:  Text("No tienes pedidos pendientes", style: TextStyle(color: grisOscuro)))
                           : ListView.builder(
                               itemCount: pedidosPendientes.length, 
                               itemBuilder: (context, index) {
@@ -133,6 +134,8 @@ class _HomePageState extends State<HomePage> {
                                   clientRut: order.clientRut,
                                   deliveryWindow: order.deliveryWindow,
                                   notes: order.notes,
+                                  latitude: order.latitude,
+                                  longitude: order.longitude,
                                 );
                               },
                             ),

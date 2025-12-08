@@ -14,6 +14,8 @@ class OrderCard extends StatelessWidget {
   final String clientRut;
   final String deliveryWindow;
   final String notes;
+  final double latitude;
+  final double longitude;
 
   const OrderCard({
     super.key,
@@ -27,6 +29,8 @@ class OrderCard extends StatelessWidget {
     required this.clientRut,
     required this.deliveryWindow,
     required this.notes,
+    required this.latitude,     
+    required this.longitude,
   });
 
   @override
@@ -46,6 +50,8 @@ class OrderCard extends StatelessWidget {
             clientRut: clientRut,
             deliveryWindow: deliveryWindow,
             notes: notes,
+            latitude: latitude,
+            longitude: longitude,
           ),
         );
       },

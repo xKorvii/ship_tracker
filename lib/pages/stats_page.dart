@@ -46,15 +46,15 @@ class _StatsPageState extends State<StatsPage> {
         builder: (context, orderProvider, child) {
           final stats = orderProvider.statsData;
 
-          final completados = (stats['weeklySummary']?['completados'] as List<int>?) ?? List.filled(7, 0);
-          final pendientes = (stats['weeklySummary']?['pendientes'] as List<int>?) ?? List.filled(7, 0);
-          final cancelados = (stats['weeklySummary']?['cancelados'] as List<int>?) ?? List.filled(7, 0);
+          final completados = List<int>.from(stats['weeklySummary']?['completados'] ?? List.filled(7, 0));
+          final pendientes = List<int>.from(stats['weeklySummary']?['pendientes'] ?? List.filled(7, 0));
+          final cancelados = List<int>.from(stats['weeklySummary']?['cancelados'] ?? List.filled(7, 0));
           
           final totalCompletadas = (stats['totals']?['Completado']?.toString()) ?? '0';
           final totalPendientes = (stats['totals']?['Pendiente']?.toString()) ?? '0';
           final totalCanceladas = (stats['totals']?['Cancelado']?.toString()) ?? '0';
           
-          final monthlyRates = (stats['monthlyRates'] as List<int>?) ?? [0, 0, 0, 0, 0];
+          final monthlyRates = List<int>.from(stats['monthlyRates'] ?? [0, 0, 0, 0, 0]);
           final hasData = stats['hasData'] as bool? ?? false;
 
   
@@ -126,7 +126,7 @@ class _StatsPageState extends State<StatsPage> {
             return Scaffold(
               backgroundColor: blanco,
               appBar: AppBar(backgroundColor: verde, foregroundColor: blanco, elevation: 0, title: Text('Estadísticas', style: GoogleFonts.archivoBlack(fontSize: 20, color: blanco)), centerTitle: true),
-              body: Center(child: Text("No hay datos de pedidos para mostrar estadísticas.", style: TextStyle(color: negro))),
+              body: Center(child: Text("No hay datos de pedidos para mostrar estadísticas.", style: TextStyle(color: grisOscuro))),
               bottomNavigationBar: const BottomNavBar(selectedIndex: 2),
             );
           }

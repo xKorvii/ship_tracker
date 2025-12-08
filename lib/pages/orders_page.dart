@@ -30,10 +30,8 @@ class _OrdersPageState extends State<OrdersPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Obtener datos
     final orderProvider = Provider.of<OrderProvider>(context);
     
-    // Filtro para todo lo que no sea pendiente
     final historial = orderProvider.orders
         .where((o) => o.status != 'Pendiente')
         .toList();
@@ -100,11 +98,13 @@ class _OrdersPageState extends State<OrdersPage> {
                               estado: order.status,
                               // Color dinámico según estado
                               estadoColor: order.status == 'Completado' ? verdeClaro : rojo,
-                              mostrarBotones: false, // En el historial no mostramos botones de acción
+                              mostrarBotones: false, 
                               clientName: order.clientName,
                               clientRut: order.clientRut,
                               deliveryWindow: order.deliveryWindow,
                               notes: order.notes,
+                              latitude: order.latitude,
+                              longitude: order.longitude,
                             );
                           },
                         ),
