@@ -86,6 +86,7 @@ class OrderProvider extends ChangeNotifier {
         clientRut: clientRut,
         deliveryWindow: deliveryWindow,
         notes: notes,
+        createdAt: DateTime.now(),
       );
 
       await _supabase.from('orders').insert(newOrder.toMap());
