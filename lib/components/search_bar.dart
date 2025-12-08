@@ -3,7 +3,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:ship_tracker/theme/theme.dart';
 
 class Search extends StatelessWidget {
-  const Search({super.key});
+  final ValueChanged<String>? onChanged;
+  
+  const Search({
+    super.key,
+    this.onChanged,
+    });
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +29,7 @@ class Search extends StatelessWidget {
 
           Expanded(
             child: TextField(
+              onChanged: onChanged,
               cursorColor: verde,
               style: GoogleFonts.inter(
                 fontSize: 14,
@@ -32,7 +38,7 @@ class Search extends StatelessWidget {
               decoration: InputDecoration(
                 isDense: true, 
                 border: InputBorder.none, 
-                hintText: 'Buscar pedido',
+                hintText: 'Buscar por ID o Cliente',
                 hintStyle: GoogleFonts.inter(
                   color: grisOscuro,
                   fontSize: 14,
