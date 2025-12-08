@@ -35,7 +35,9 @@ class OrderModel {
       clientRut: map['client_rut'] ?? '',
       deliveryWindow: map['delivery_window'] ?? '',
       notes: map['notes'] ?? '',
-      createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
+      createdAt: map['created_at'] != null 
+          ? DateTime.parse(map['created_at']).toLocal() 
+          : null,
     );
   }
 
@@ -49,6 +51,7 @@ class OrderModel {
       'client_rut': clientRut,
       'delivery_window': deliveryWindow,
       'notes': notes,
+      if (createdAt != null) 'created_at': createdAt!.toIso8601String(),
     };
   }
 }
