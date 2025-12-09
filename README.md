@@ -66,7 +66,7 @@ lib/
 ├── theme/           # Configuración de estilos y colores
 ├── utils/           # Validadores, formateadores (RUT) y manejo de errores
 └── main.dart        # Punto de entrada e inicialización de Supabase
-```
+text```
 
 ---
 
