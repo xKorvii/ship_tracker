@@ -24,6 +24,19 @@ class _OrdersPageState extends State<OrdersPage> {
   String _searchQuery = '';
   bool _showNewestFirst = true;// mas recientes primero
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
+  }
+
+  // Función para recargar
+  Future<void> _loadData() async {
+    await Provider.of<OrderProvider>(context, listen: false).fetchOrders();
+  }
+
   Future<bool> _goBackToHome() async {
     Navigator.pushReplacement(
       context,
@@ -104,17 +117,15 @@ class _OrdersPageState extends State<OrdersPage> {
   @override
   Widget build(BuildContext context) {
     final orderProvider = Provider.of<OrderProvider>(context);
-
-    // usar la función para obtener la lista procesadas
     final historialFiltrado = _getFilteredOrders(orderProvider.orders);
-        
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop) {
           _goBackToHome();
         }
-      }, 
+      },
       child: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: Scaffold(
@@ -122,7 +133,7 @@ class _OrdersPageState extends State<OrdersPage> {
             backgroundColor: verde,
             foregroundColor: blanco,
             elevation: 0,
-            automaticallyImplyLeading: true, 
+            automaticallyImplyLeading: true,
             title: Text(
               'Historial de órdenes',
               style: GoogleFonts.archivoBlack(
@@ -141,61 +152,87 @@ class _OrdersPageState extends State<OrdersPage> {
               },
             ),
           ),
-
           backgroundColor: blanco,
 
-          body: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const WelcomeHeader(),
-                const SizedBox(height: 16),
-                Search(
-                  onChanged: (value) {
-                    setState(() {
-                      _searchQuery = value;
-                    });
-                  },
-                ),
-                const SizedBox(height: 10),
-                OrderFilter(
-                  onTap: _showSortOptions,
-                ),
-                const SizedBox(height: 16),
-                
-                Expanded(
-                  child: historialFiltrado.isEmpty
-                      ? Center(
-                          child: Text(
-                            _searchQuery.isEmpty 
-                                ? "No hay historial de pedidos" 
-                                : "No se encontraron resultados",
-                            style: TextStyle(color: grisOscuro),
-                          ),
-                        )
-                      : ListView.builder(
-                          itemCount: historialFiltrado.length,
-                          itemBuilder: (context, index) {
-                            final order = historialFiltrado[index];
-                            return OrderCard(
-                              orderId: order.id!,
-                              codigo: order.code,
-                              direccion: order.address,
-                              estado: order.status,
-                              estadoColor: order.status == 'Completado' ? verdeClaro : rojo,
-                              mostrarBotones: false,
-                              clientName: order.clientName,
-                              clientRut: order.clientRut,
-                              deliveryWindow: order.deliveryWindow,
-                              notes: order.notes,
-                              latitude: order.latitude,
-                              longitude: order.longitude,
-                            );
+          // para recargar deslizando
+          body: RefreshIndicator(
+            onRefresh: _loadData,
+            color: verde,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 10),
+                        const WelcomeHeader(),
+                        const SizedBox(height: 16),
+                        Search(
+                          onChanged: (value) {
+                            setState(() {
+                              _searchQuery = value;
+                            });
                           },
                         ),
-                ),
-              ],
+                        const SizedBox(height: 10),
+                        OrderFilter(
+                          onTap: _showSortOptions,
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    ),
+                  ),
+
+                  if (orderProvider.isLoading)
+                    const SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else if (historialFiltrado.isEmpty)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: Text(
+                          _searchQuery.isEmpty
+                              ? "No hay historial de pedidos"
+                              : "No se encontraron resultados",
+                          style: TextStyle(color: grisOscuro),
+                        ),
+                      ),
+                    )
+                  else
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final order = historialFiltrado[index];
+                          return OrderCard(
+                            orderId: order.id!,
+                            codigo: order.code,
+                            direccion: order.address,
+                            estado: order.status,
+                            estadoColor: order.status == 'Completado'
+                                ? verdeClaro
+                                : rojo,
+                            mostrarBotones: false,
+                            clientName: order.clientName,
+                            clientRut: order.clientRut,
+                            deliveryWindow: order.deliveryWindow,
+                            notes: order.notes,
+                            latitude: order.latitude,
+                            longitude: order.longitude,
+                          );
+                        },
+                        childCount: historialFiltrado.length,
+                      ),
+                    ),
+                  const SliverToBoxAdapter(
+                    child: SizedBox(height: 100),
+                  ),
+                ],
+              ),
             ),
           ),
 
@@ -205,7 +242,8 @@ class _OrdersPageState extends State<OrdersPage> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const CreateOrderPage()),
+                MaterialPageRoute(
+                    builder: (context) => const CreateOrderPage()),
               );
             },
             child: Container(
@@ -225,7 +263,8 @@ class _OrdersPageState extends State<OrdersPage> {
               child: Icon(Icons.add, color: blanco, size: 32),
             ),
           ),
-          floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.centerDocked,
         ),
       ),
     );
