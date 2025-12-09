@@ -26,11 +26,19 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    // Cargar datos al iniciar la pantalla
+    // Carga inicial
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<OrderProvider>(context, listen: false).fetchOrders();
-      Provider.of<OrderProvider>(context, listen: false).fetchAndComputeStats();
+      _loadData();
     });
+  }
+
+  // Función para cargar datos
+  Future<void> _loadData() async {
+    final orderProvider = Provider.of<OrderProvider>(context, listen: false);
+    await Future.wait([
+      orderProvider.fetchOrders(),
+      orderProvider.fetchAndComputeStats(),
+    ]);
   }
 
   Future<bool> _confirmLogout() async {
@@ -73,9 +81,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // Obtener datos del provider
     final orderProvider = Provider.of<OrderProvider>(context);
-
     final pedidosPendientes = _getFilteredPendingOrders(orderProvider.orders);
 
     return WillPopScope(
@@ -86,14 +92,11 @@ class _HomePageState extends State<HomePage> {
           appBar: AppBar(
             backgroundColor: verde,
             foregroundColor: blanco,
-            automaticallyImplyLeading: false, 
+            automaticallyImplyLeading: false,
             elevation: 0,
             title: Text(
               'Inicio',
-              style: GoogleFonts.archivoBlack(
-                fontSize: 20,
-                color: blanco,
-              ),
+              style: GoogleFonts.archivoBlack(fontSize: 20, color: blanco),
             ),
             centerTitle: true,
             actions: [
@@ -102,18 +105,12 @@ class _HomePageState extends State<HomePage> {
                 onPressed: () async {
                   final confirm = await _confirmLogout();
                   if (confirm) {
-                    // cerrar sesión en Supabase
                     await Supabase.instance.client.auth.signOut();
-
                     if (!context.mounted) return;
-
                     Provider.of<OrderProvider>(context, listen: false).clearData();
                     Provider.of<UserProvider>(context, listen: false).clearData();
-
                     Navigator.pushReplacement(
-                      context, 
-                      MaterialPageRoute(builder: (_) => const LoginPage())
-                    );
+                        context, MaterialPageRoute(builder: (_) => const LoginPage()));
                   }
                 },
               ),
@@ -121,61 +118,83 @@ class _HomePageState extends State<HomePage> {
           ),
 
           backgroundColor: blanco,
+          
+          body: RefreshIndicator(
+            onRefresh: _loadData,
+            color: verde,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 10),
+                        const WelcomeHeader(),
+                        const SizedBox(height: 16),
+                        Search(
+                          onChanged: (value) {
+                            setState(() {
+                              _searchQuery = value;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                      ],
+                    ),
+                  ),
 
-          body: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const WelcomeHeader(),
-                const SizedBox(height: 16),
-                Search(
-                  onChanged: (value) {
-                    setState(() {
-                      _searchQuery = value;
-                    });
-                  },
-                ),
-                const SizedBox(height: 10),
-                
-                Expanded(
-                  child: orderProvider.isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : pedidosPendientes.isEmpty
-                          ? Center(
-                              child: Text(
-                                _searchQuery.isEmpty 
-                                  ? "No tienes pedidos pendientes" 
-                                  : "No se encontraron pedidos",
-                                style: TextStyle(color: grisOscuro),
-                              )
-                            )
-                          : ListView.builder(
-                              itemCount: pedidosPendientes.length, 
-                              itemBuilder: (context, index) {
-                                final order = pedidosPendientes[index];
-                                return OrderCard(
-                                  orderId: order.id!,
-                                  codigo: order.code,
-                                  direccion: order.address,
-                                  estado: order.status,
-                                  estadoColor: amarillo,
-                                  clientName: order.clientName,
-                                  clientRut: order.clientRut,
-                                  deliveryWindow: order.deliveryWindow,
-                                  notes: order.notes,
-                                  latitude: order.latitude,
-                                  longitude: order.longitude,
-                                );
-                              },
-                            ),
-                ),
-              ],
+                  if (orderProvider.isLoading)
+                    const SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else if (pedidosPendientes.isEmpty)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: Text(
+                          _searchQuery.isEmpty 
+                            ? "No tienes pedidos pendientes" 
+                            : "No se encontraron pedidos",
+                          style: TextStyle(color: grisOscuro),
+                        ),
+                      ),
+                    )
+                  else
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final order = pedidosPendientes[index];
+                          return OrderCard(
+                            orderId: order.id!,
+                            codigo: order.code,
+                            direccion: order.address,
+                            estado: order.status,
+                            estadoColor: amarillo,
+                            clientName: order.clientName,
+                            clientRut: order.clientRut,
+                            deliveryWindow: order.deliveryWindow,
+                            notes: order.notes,
+                            latitude: order.latitude,
+                            longitude: order.longitude,
+                          );
+                        },
+                        childCount: pedidosPendientes.length,
+                      ),
+                    ),
+
+                  const SliverToBoxAdapter(
+                    child: SizedBox(height: 100),
+                  ),
+                ],
+              ),
             ),
           ),
 
           bottomNavigationBar: const BottomNavBar(selectedIndex: 0),
-
           floatingActionButton: GestureDetector(
             onTap: () {
               Navigator.push(
@@ -191,16 +210,14 @@ class _HomePageState extends State<HomePage> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: negro,
-                    blurRadius: 6,
-                    offset: const Offset(0, 3),
-                  ),
+                      color: negro, blurRadius: 6, offset: const Offset(0, 3)),
                 ],
               ),
               child: Icon(Icons.add, color: blanco, size: 32),
             ),
           ),
-          floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+          floatingActionButtonLocation:
+            FloatingActionButtonLocation.centerDocked,
         ),
       ),
     );
