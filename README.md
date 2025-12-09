@@ -113,32 +113,36 @@ lib/
 
 ## Cómo probar la aplicación
 
-1.  **Inicio de Sesión:**
-    * Utiliza las credenciales de prueba:
-        * **Correo:** `nico@gmail.com`
-        * **Contraseña:** `12345678`
-    * O regístrate con una cuenta nueva (recuerda confirmar tu correo electrónico si es requerido).
+1. **Registro de Usuario:**
+   * En la pantalla de bienvenida, presiona el botón "Registrarse".
+   * Completa el formulario con tus datos personales (Nombre, Apellido, RUT válido, Teléfono, Correo electrónico y Contraseña).
+   * Al finalizar el registro, el sistema enviará automáticamente un correo de confirmación.
+   * **Importante:** Debes ingresar a tu bandeja de entrada y verificar tu cuenta a través del enlace recibido antes de poder iniciar sesión.
 
-2.  **Crear un Nuevo Pedido:**
-    * Pulsa el botón flotante **(+)** ubicado en el centro de la barra inferior.
-    * Completa el formulario con los datos del cliente.
-    * Toca el mapa para abrir el selector, elige un punto de entrega y guarda el pedido.
+2. **Inicio de Sesión:**
+   * Una vez confirmada tu cuenta, regresa a la pantalla de Login.
+   * Ingresa tus credenciales (correo y contraseña) para acceder a la aplicación.
 
-3.  **Gestionar Pedidos Pendientes (Inicio):**
-    * En la pantalla **Inicio** (icono de casa), verás la lista de pedidos con estado *Pendiente*.
-    * **Toca cualquier tarjeta** para ver el detalle completo y la ubicación en el mapa.
-    * Utiliza los botones dentro del detalle para **Confirmar** o **Cancelar** la entrega.
+3. **Crear un Nuevo Pedido:**
+   * Pulsa el botón flotante (+) ubicado en el centro de la barra inferior.
+   * Completa el formulario con los datos del cliente.
+   * Toca el mapa para abrir el selector, elige un punto de entrega exacto y guarda el pedido.
 
-4.  **Consultar Historial:**
-    * Ve a la pestaña **Historial** (icono de documento/recibo).
-    * Aquí aparecerán los pedidos que ya fueron *Completados* o *Cancelados*. Puedes usar la barra de búsqueda o los filtros de ordenamiento para localizarlos.
+4. **Gestionar Pedidos Pendientes (Inicio):**
+   * En la pantalla de Inicio (Home), verás la lista de pedidos con estado "Pendiente".
+   * Toca cualquier tarjeta para ver el detalle completo y la ubicación en el mapa.
+   * Utiliza los botones "Confirmar" o "Cancelar" dentro del detalle para finalizar el proceso de entrega.
 
-5.  **Ver Estadísticas:**
-    * Navega a la pestaña de **Estadísticas** (icono de gráfico) para visualizar el resumen semanal y la tasa de éxito mensual.
+5. **Consultar Historial:**
+   * Ve a la pestaña Historial (segundo icono en la barra de navegación).
+   * Aquí aparecerán los pedidos que ya fueron procesados (Completados o Cancelados). Puedes usar la barra de búsqueda o los filtros de ordenamiento para localizarlos.
 
-6.  **Editar Perfil:**
-    * Accede a la pestaña **Perfil** (icono de persona).
-    * Puedes modificar tus datos personales, cambiar tu contraseña o tocar tu avatar para subir una nueva foto de perfil (desde cámara o galería).
+6. **Ver Estadísticas:**
+   * Navega a la pestaña de Estadísticas para visualizar el resumen semanal de pedidos y la tasa de éxito mensual.
+
+7. **Editar Perfil:**
+   * Accede a la pestaña Perfil.
+   * Puedes modificar tus datos personales, actualizar tu contraseña o tocar tu avatar para subir una nueva foto de perfil desde la cámara o galería.
 
 ---
 
