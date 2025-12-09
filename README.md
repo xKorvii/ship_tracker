@@ -55,8 +55,9 @@ El proyecto está construido sobre Flutter (Dart) y utiliza las siguientes depen
 
 ## Estructura del Proyecto
 
-El código fuente se encuentra organizado siguiendo una arquitectura limpia y modular dentro de la carpeta lib/:
+El código fuente se encuentra organizado siguiendo una arquitectura limpia y modular dentro de la carpeta `lib/`:
 
+```text
 lib/
 ├── components/      # Widgets reutilizables (Botones, Inputs, Tarjetas, Modales)
 ├── models/          # Modelos de datos (OrderModel)
@@ -111,11 +112,32 @@ lib/
 
 ## Cómo probar la aplicación
 
-1. Inicia sesión o registra un usuario. Usuario de prueba = Correo: nico@gmail.com, Contraseña: 12345678
-2. Explora la pantalla principal y revisa los pedidos disponibles.
-3. Visualiza el panel para crear un nuevo pedido con el botón central del menú inferior.
-4. Visualiza la vista para editar tu perfil desde el icono de usuario.
-5. Visualiza y confirma/cancela pedidos desde el historial.
+1.  **Inicio de Sesión:**
+    * Utiliza las credenciales de prueba:
+        * **Correo:** `nico@gmail.com`
+        * **Contraseña:** `12345678`
+    * O regístrate con una cuenta nueva (recuerda confirmar tu correo electrónico si es requerido).
+
+2.  **Crear un Nuevo Pedido:**
+    * Pulsa el botón flotante **(+)** ubicado en el centro de la barra inferior.
+    * Completa el formulario con los datos del cliente.
+    * Toca el mapa para abrir el selector, elige un punto de entrega y guarda el pedido.
+
+3.  **Gestionar Pedidos Pendientes (Inicio):**
+    * En la pantalla **Inicio** (icono de casa), verás la lista de pedidos con estado *Pendiente*.
+    * **Toca cualquier tarjeta** para ver el detalle completo y la ubicación en el mapa.
+    * Utiliza los botones dentro del detalle para **Confirmar** o **Cancelar** la entrega.
+
+4.  **Consultar Historial:**
+    * Ve a la pestaña **Historial** (icono de documento/recibo).
+    * Aquí aparecerán los pedidos que ya fueron *Completados* o *Cancelados*. Puedes usar la barra de búsqueda o los filtros de ordenamiento para localizarlos.
+
+5.  **Ver Estadísticas:**
+    * Navega a la pestaña de **Estadísticas** (icono de gráfico) para visualizar el resumen semanal y la tasa de éxito mensual.
+
+6.  **Editar Perfil:**
+    * Accede a la pestaña **Perfil** (icono de persona).
+    * Puedes modificar tus datos personales, cambiar tu contraseña o tocar tu avatar para subir una nueva foto de perfil (desde cámara o galería).
 
 ---
 
