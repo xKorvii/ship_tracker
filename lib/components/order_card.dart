@@ -17,6 +17,7 @@ class OrderCard extends StatelessWidget {
   final double latitude;
   final double longitude;
   final bool allowUndo;
+  final DateTime? createdAt;
 
   const OrderCard({
     super.key,
@@ -33,6 +34,7 @@ class OrderCard extends StatelessWidget {
     required this.notes,
     required this.latitude,     
     required this.longitude,
+    this.createdAt,
   });
 
   @override
@@ -55,6 +57,7 @@ class OrderCard extends StatelessWidget {
             notes: notes,
             latitude: latitude,
             longitude: longitude,
+            createdAt: createdAt,
           ),
         );
       },

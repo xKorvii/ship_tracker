@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:ship_tracker/pages/order_canceled.dart';
 import 'package:ship_tracker/pages/order_completed.dart';
 import '../components/button.dart';
@@ -21,7 +22,7 @@ class OrderDetailModal extends StatelessWidget {
   final String notes;
   final double latitude;
   final double longitude;
-
+  final DateTime? createdAt;
 
   const OrderDetailModal({
     super.key,
@@ -36,6 +37,7 @@ class OrderDetailModal extends StatelessWidget {
     required this.notes,
     required this.latitude,     
     required this.longitude,
+    this.createdAt,
   });
 
   @override
@@ -100,6 +102,17 @@ class OrderDetailModal extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
+
+          // Fechas pedidos
+          if (createdAt != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _infoRow(
+                Icons.calendar_today, 
+                DateFormat('dd/MM/yyyy HH:mm').format(createdAt!), 
+                Colors.white70
+              ),
+            ),
           
           // Dirección
           _infoRow(Icons.location_on, direccion, verde),

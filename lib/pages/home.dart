@@ -180,6 +180,7 @@ class _HomePageState extends State<HomePage> {
                             notes: order.notes,
                             latitude: order.latitude,
                             longitude: order.longitude,
+                            createdAt: order.createdAt,
                           );
                         },
                         childCount: pedidosPendientes.length,
