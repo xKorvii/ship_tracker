@@ -217,6 +217,7 @@ class _OrdersPageState extends State<OrdersPage> {
                                 ? verdeClaro
                                 : rojo,
                             mostrarBotones: false,
+                            allowUndo: true,
                             clientName: order.clientName,
                             clientRut: order.clientRut,
                             deliveryWindow: order.deliveryWindow,

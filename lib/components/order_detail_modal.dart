@@ -11,6 +11,7 @@ import 'package:latlong2/latlong.dart';
 
 class OrderDetailModal extends StatelessWidget {
   final bool mostrarBotones;
+  final bool allowUndo;
   final int orderId;
   final String codigo;
   final String direccion;
@@ -25,6 +26,7 @@ class OrderDetailModal extends StatelessWidget {
   const OrderDetailModal({
     super.key,
     this.mostrarBotones = true,
+    this.allowUndo = false,
     required this.orderId,
     required this.codigo,
     required this.direccion,
@@ -204,6 +206,29 @@ class OrderDetailModal extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          
+          if (allowUndo && !mostrarBotones)
+            CustomButton(
+              text: 'Restaurar a Pendiente',
+              backgroundColor: amarillo,
+              textColor: negro,
+              height: 45,
+              width: double.infinity,
+              onPressed: () async {
+                await Provider.of<OrderProvider>(context, listen: false)
+                    .updateOrderStatus(orderId, 'Pendiente');
+                
+                if (!context.mounted) return;
+                Navigator.pop(context);
+              
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('Pedido restaurado a Pendiente'),
+                    backgroundColor: verde,
+                  ),
+                );
+              },
             ),
         ],
       ),

@@ -16,6 +16,7 @@ class OrderCard extends StatelessWidget {
   final String notes;
   final double latitude;
   final double longitude;
+  final bool allowUndo;
 
   const OrderCard({
     super.key,
@@ -25,6 +26,7 @@ class OrderCard extends StatelessWidget {
     required this.estado,
     required this.estadoColor,
     this.mostrarBotones = true,
+    this.allowUndo = false,
     required this.clientName,
     required this.clientRut,
     required this.deliveryWindow,
@@ -43,6 +45,7 @@ class OrderCard extends StatelessWidget {
           isScrollControlled: true,
           builder: (_) => OrderDetailModal(
             mostrarBotones: mostrarBotones,
+            allowUndo: allowUndo,
             orderId: orderId,
             codigo: codigo,
             direccion: direccion,
