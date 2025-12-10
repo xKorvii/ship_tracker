@@ -141,8 +141,11 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
 
       if (placemarks.isNotEmpty) {
         final p = placemarks.first;
-        finalAddress =
-            "${p.street ?? ''} ${p.name ?? ''}, ${p.locality ?? ''}, ${p.country ?? ''}".trim();
+
+        finalAddress = "${p.street ?? ''}, ${p.locality ?? ''}, ${p.country ?? ''}".trim();
+        if (finalAddress.startsWith(', ')) {
+          finalAddress = finalAddress.substring(2);
+        }
       }
 
 

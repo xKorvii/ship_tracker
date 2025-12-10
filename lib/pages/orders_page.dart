@@ -224,6 +224,7 @@ class _OrdersPageState extends State<OrdersPage> {
                             notes: order.notes,
                             latitude: order.latitude,
                             longitude: order.longitude,
+                            createdAt: order.createdAt,
                           );
                         },
                         childCount: historialFiltrado.length,
